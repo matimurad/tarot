@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tarot · Tirada de cartas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Italianno&family=Simonetta:ital,wght@0,400;0,900;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#f3e8d2; --muted:#c9b797; --gold:#d6b25e; --gold2:#f0d792; --line:rgba(214,178,94,.26);
+  --serif:'Simonetta', Georgia, 'Times New Roman', serif; --script:'Italianno', 'Simonetta', cursive;
+  --paper: radial-gradient(ellipse at 50% 42%, #f8f0de 0%, #eee1c4 62%, #dcc79e 100%);
+}
+*{box-sizing:border-box; font-synthesis:none}
+html,body{margin:0}
+body{
+  min-height:100vh; color:var(--ink); font-family:var(--serif); font-size:18px; line-height:1.5; letter-spacing:-.02em;
+  background:#120910 radial-gradient(ellipse 120% 80% at 50% 0%, #3b1b36 0%, #1f0f1d 48%, #0e070d 100%) fixed;
+}
+body::before{content:""; position:fixed; inset:0; pointer-events:none; background-image:var(--noise); opacity:.07; mix-blend-mode:overlay; z-index:0}
+button{font-family:inherit; letter-spacing:inherit}
+:focus-visible{outline:2px solid var(--gold2); outline-offset:3px}
+[hidden]{display:none !important}
+
+header.top{position:relative; text-align:center; padding:26px 16px 4px; z-index:1}
+h1{font-family:var(--script); font-weight:400; font-size:clamp(70px,13vw,112px); line-height:.85; margin:0; color:var(--gold2); letter-spacing:0; text-shadow:0 2px 22px rgba(214,178,94,.28)}
+.sub{margin:6px 0 0; color:var(--muted); font-style:italic}
+.orn{display:flex; align-items:center; justify-content:center; gap:10px; color:var(--gold); margin:10px 0 0}
+.orn::before,.orn::after{content:""; width:70px; height:1px; background:linear-gradient(90deg, transparent, var(--gold))}
+.orn::after{transform:scaleX(-1)}
+.tabs{display:flex; justify-content:center; gap:6px; margin:16px auto 4px; flex-wrap:wrap}
+.tab{font-size:16px; background:none; border:1px solid var(--line); color:var(--muted); padding:7px 16px; border-radius:999px; cursor:pointer}
+.tab:hover{color:var(--ink)}
+.tab.active{background:rgba(214,178,94,.15); color:var(--gold2); border-color:rgba(214,178,94,.65)}
+
+main{position:relative; z-index:1}
+.view{max-width:1100px; margin:0 auto; padding:0 14px 70px}
+.setup{display:grid; gap:14px; margin:18px auto 6px; max-width:820px}
+.spreads{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
+.chip{font-size:16px; padding:8px 14px; border-radius:14px; border:1px solid var(--line); background:rgba(255,255,255,.03); color:var(--ink); cursor:pointer; text-align:left; line-height:1.15}
+.chip small{display:block; color:var(--muted); font-size:13px; font-style:italic}
+.chip:hover:not(:disabled){border-color:rgba(214,178,94,.55)}
+.chip.active{border-color:var(--gold); background:rgba(214,178,94,.16)}
+.chip:disabled{opacity:.42; cursor:default}
+.row2{display:grid; grid-template-columns:1fr auto; gap:14px; align-items:end}
+.q span{display:block; font-size:14px; color:var(--muted); margin-bottom:4px; font-style:italic}
+.q textarea{width:100%; font:inherit; letter-spacing:inherit; color:var(--ink); background:rgba(0,0,0,.28); border:1px solid var(--line); border-radius:14px; padding:10px 14px; resize:vertical; min-height:48px}
+.q textarea::placeholder{color:rgba(201,183,151,.6)}
+.toggle{display:flex; gap:8px; align-items:center; color:var(--muted); font-size:16px; cursor:pointer; padding-bottom:12px; white-space:nowrap}
+.toggle input{accent-color:var(--gold); width:18px; height:18px}
+
+.table{position:relative; margin:16px auto 0; padding:22px 16px 26px; border-radius:30px;
+  background:radial-gradient(ellipse 90% 70% at 50% 30%, #4b1f3e 0%, #2d1228 55%, #1a0a17 100%);
+  border:1px solid rgba(214,178,94,.2); box-shadow:inset 0 0 90px rgba(0,0,0,.6), 0 20px 50px rgba(0,0,0,.35); overflow:hidden}
+.table::before{content:""; position:absolute; inset:0; background-image:var(--noise); opacity:.16; mix-blend-mode:overlay; pointer-events:none}
+.hint{position:relative; text-align:center; font-style:italic; color:var(--gold2); min-height:1.5em; margin:0 0 16px; font-size:18px}
+.slots{position:relative; margin:0 auto}
+.slot{position:absolute}
+.ph{position:absolute; inset:0; border:1.5px dashed rgba(214,178,94,.38); border-radius:6%/3.6%; display:flex; align-items:center; justify-content:center; color:rgba(214,178,94,.7); font-family:var(--script); font-size:34px; transition:opacity .3s}
+.slot.filled .ph{opacity:0}
+.ph span{display:inline-block}
+.slot-label{position:absolute; top:100%; left:-30px; right:-30px; margin-top:7px; text-align:center; font-family:var(--script); color:var(--gold2); font-size:28px; line-height:1}
+.slot-num{position:absolute; top:-9px; left:-9px; width:22px; height:22px; border-radius:50%; background:#2a1326; border:1px solid var(--gold); color:var(--gold2); font-size:12px; line-height:20px; text-align:center; z-index:5; letter-spacing:0}
+.slotcard{position:absolute; inset:0; border:0; padding:0; background:none; cursor:pointer; border-radius:6%/3.6%}
+
+.card{position:absolute; inset:0; perspective:1200px}
+.card-inner{position:absolute; inset:0; transform-style:preserve-3d; transition:transform .9s cubic-bezier(.25,.8,.25,1)}
+.card-inner.flipped{transform:rotateY(180deg)}
+.face{position:absolute; inset:0; border-radius:5.5%/3.2%; overflow:hidden; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  box-shadow:0 1px 2px rgba(0,0,0,.55), 0 8px 20px rgba(0,0,0,.45)}
+.back{background:var(--back) center/100% 100% no-repeat, #1a2147}
+.back::after{content:""; position:absolute; inset:0; background:linear-gradient(135deg, rgba(255,255,255,.16), rgba(255,255,255,0) 42%, rgba(0,0,0,.14))}
+.front{transform:rotateY(180deg); background:var(--paper)}
+.front::after,.mini::after{content:""; position:absolute; inset:0; background-image:var(--noise); opacity:.3; mix-blend-mode:multiply; pointer-events:none}
+.art{position:absolute; inset:0}
+.art svg{display:block; width:100%; height:100%}
+.art.rev{transform:rotate(180deg)}
+.t-num{font-family:var(--serif); font-size:17px; fill:#2a1f17; letter-spacing:-.02em}
+.t-name{font-family:var(--script); fill:#2a1f17}
+.t-lt{font-family:var(--serif); letter-spacing:-.02em}
+
+.deckzone{position:relative; margin:22px auto 0}
+.stack{position:relative; display:block; margin:0 auto; border:0; padding:0; background:none; cursor:pointer}
+.stack:disabled{cursor:default}
+.layer,.pile .layer{position:absolute; inset:0}
+.deckcap{text-align:center; color:var(--muted); font-style:italic; font-size:15px; margin:10px 0 0}
+.piles{display:flex; justify-content:center; align-items:flex-end; gap:clamp(14px,4vw,40px)}
+.pile{position:relative; border:0; padding:0; background:none; cursor:pointer; transition:transform .2s}
+@media (hover:hover){ .pile:hover{transform:translateY(-8px)} }
+.fan{position:relative; margin:0 auto}
+.fc{position:absolute; left:0; top:0; border:0; padding:0; background:none; cursor:pointer; transform:rotate(var(--rot)); transform-origin:50% 100%; transition:transform .16s ease}
+.fc .face{box-shadow:-1px 1px 3px rgba(0,0,0,.5)}
+@media (hover:hover){ .fc:hover{transform:translateY(-14px) rotate(var(--rot))} }
+.fc.taken{visibility:hidden; pointer-events:none}
+.flyer{position:fixed; z-index:40; pointer-events:none}
+
+.actions{position:relative; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:20px}
+.btn{font-size:17px; padding:10px 22px; border-radius:999px; border:1px solid var(--gold); background:rgba(0,0,0,.15); color:var(--gold2); cursor:pointer; transition:background .2s, transform .1s}
+.btn:hover:not(:disabled){background:rgba(214,178,94,.14)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn.primary{background:linear-gradient(#e6c675,#c79e48); color:#2a1320; border-color:#edd28e}
+.btn.primary:hover:not(:disabled){background:linear-gradient(#efd187,#d0a853)}
+.btn:disabled{opacity:.5; cursor:default}
+.btn.sm{font-size:15px; padding:6px 14px}
+.btn.ghost{border-color:var(--line); color:var(--muted)}
+
+.reading{max-width:840px; margin:30px auto 0}
+.rhead{text-align:center; margin-bottom:8px}
+.rhead h2{font-family:var(--script); font-weight:400; font-size:58px; line-height:1; margin:0; color:var(--gold2); letter-spacing:0}
+.meta{color:var(--muted); font-size:15px; margin:4px 0 0; font-style:italic}
+.question{font-style:italic; font-size:19px; margin:10px auto 0; max-width:620px}
+.entry{display:grid; grid-template-columns:118px 1fr; gap:20px; padding:20px 0; border-top:1px solid var(--line)}
+.entry.new{animation:rise .7s ease both}
+@keyframes rise{from{opacity:0; transform:translateY(12px)} to{opacity:1; transform:none}}
+.mini{position:relative; width:100%; aspect-ratio:200/340; border-radius:5.5%/3.2%; overflow:hidden; background:var(--paper); box-shadow:0 4px 14px rgba(0,0,0,.45)}
+.pos{font-family:var(--script); font-size:40px; color:var(--gold2); line-height:.9; letter-spacing:0}
+.pos .n{font-family:var(--serif); font-size:15px; color:var(--muted); vertical-align:middle; margin-right:6px; letter-spacing:-.02em}
+.posdesc{margin:4px 0 0; font-size:15px; color:var(--muted); font-style:italic}
+.cname{font-family:var(--serif); font-weight:900; font-size:21px; margin:10px 0 0; line-height:1.25}
+.orient{font-weight:400; font-style:italic; color:var(--muted); font-size:17px}
+.keys{color:var(--gold); font-style:italic; margin:3px 0 8px}
+.mean{margin:0}
+.entry-card{position:sticky; top:14px; align-self:start}
+.sec{font-family:var(--serif); font-weight:900; font-size:15px; color:var(--gold2); margin:16px 0 3px; letter-spacing:-.01em}
+.tip{margin:16px 0 0; padding:10px 14px; border-left:2px solid var(--gold); background:rgba(214,178,94,.08); border-radius:0 12px 12px 0; font-style:italic}
+.tip span{display:block; font-style:normal; font-weight:900; font-size:14px; color:var(--gold2); margin-bottom:2px}
+.summary b{font-weight:900; color:var(--gold2)}
+.yn{margin:12px 0 0; padding:12px 16px; border-radius:14px; background:rgba(214,178,94,.1); border:1px solid var(--line)}
+.yn b{display:block; font-family:var(--script); font-weight:400; font-size:64px; line-height:.9; color:var(--gold2); letter-spacing:0}
+.summary{margin:6px 0 0; padding:18px 22px; border:1px solid var(--line); border-radius:18px; background:rgba(214,178,94,.06)}
+.summary h3{font-family:var(--script); font-weight:400; font-size:40px; margin:0 0 4px; color:var(--gold2); line-height:1; letter-spacing:0}
+.summary p{margin:6px 0}
+
+.panel-title{font-family:var(--script); font-weight:400; font-size:56px; text-align:center; color:var(--gold2); margin:22px 0 4px; line-height:1; letter-spacing:0}
+.panel-sub{text-align:center; color:var(--muted); font-style:italic; margin:0 0 20px}
+.hist{display:grid; gap:12px; max-width:840px; margin:0 auto}
+.hist-item{border:1px solid var(--line); border-radius:18px; padding:14px 18px; display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap; background:rgba(255,255,255,.025)}
+.hist-main{flex:1 1 380px; min-width:0}
+.hist-top{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap}
+.hist-spread{font-family:var(--script); font-size:32px; color:var(--gold2); line-height:1; letter-spacing:0}
+.hist-date{font-size:14px; color:var(--muted); font-style:italic}
+.hist-q{margin:4px 0 0; font-style:italic}
+.hist-cards{margin:4px 0 0; font-size:15px; color:var(--muted)}
+.hist-btns{display:flex; gap:8px}
+.empty{text-align:center; color:var(--muted); font-style:italic; max-width:520px; margin:30px auto}
+.filters{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:0 0 20px}
+.lib{display:grid; grid-template-columns:repeat(auto-fill, minmax(108px,1fr)); gap:16px}
+.libcard{border:0; padding:0; background:none; cursor:pointer; transition:transform .2s}
+@media (hover:hover){ .libcard:hover{transform:translateY(-6px)} }
+
+.modal{position:fixed; inset:0; z-index:60; background:rgba(8,3,8,.8); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:14px}
+.modal-box{position:relative; width:100%; max-width:780px; max-height:92vh; overflow:auto; background:#1f0f1c; border:1px solid var(--line); border-radius:22px; padding:26px 24px; box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.close{position:absolute; top:10px; right:12px; width:38px; height:38px; border-radius:50%; border:1px solid var(--line); background:rgba(0,0,0,.2); color:var(--gold2); font-size:22px; line-height:1; cursor:pointer; z-index:2}
+.zoom{display:grid; grid-template-columns:minmax(170px,250px) 1fr; gap:26px; align-items:start}
+.zoom .mini{box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.zoom h3{font-family:var(--script); font-weight:400; font-size:52px; line-height:.95; color:var(--gold2); margin:0 0 4px; letter-spacing:0}
+.zoom .arc{color:var(--muted); font-style:italic; margin:0 0 12px; font-size:15px}
+.zoom h4{font-family:var(--serif); font-weight:900; font-size:18px; margin:14px 0 2px}
+.copybox{width:100%; min-height:220px; font:inherit; font-size:15px; color:var(--ink); background:rgba(0,0,0,.3); border:1px solid var(--line); border-radius:12px; padding:12px}
+.toast{position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px); background:#2b1527; border:1px solid var(--gold); color:var(--gold2); padding:10px 20px; border-radius:999px; opacity:0; transition:all .3s; z-index:70; pointer-events:none}
+.toast.show{opacity:1; transform:translateX(-50%)}
+.foot{text-align:center; color:rgba(201,183,151,.55); font-size:13px; font-style:italic; margin:30px auto 0; max-width:640px}
+
+@media (max-width:640px){
+  body{font-size:17px}
+  .row2{grid-template-columns:1fr}
+  .toggle{padding-bottom:0; justify-content:center}
+  .table{padding:18px 10px 22px; border-radius:22px}
+  .entry{grid-template-columns:84px 1fr; gap:14px}
+  .pos{font-size:34px}
+  .zoom{grid-template-columns:1fr}
+  .zoom .mini{max-width:210px; margin:0 auto}
+  .slot-label{font-size:23px}
+  .rhead h2{font-size:48px}
+}
+@media (prefers-reduced-motion: reduce){ .card-inner{transition-duration:.01s} .entry.new{animation:none} }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <clipPath id="panelClip" clipPathUnits="userSpaceOnUse"><rect width="168" height="248"/></clipPath>
+  <linearGradient id="g-dawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d27d"/><stop offset="1" stop-color="#f7ead0"/></linearGradient>
+  <linearGradient id="g-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1d06a"/><stop offset="1" stop-color="#f6e8bb"/></linearGradient>
+  <linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fc3d6"/><stop offset="1" stop-color="#eef0e4"/></linearGradient>
+  <linearGradient id="g-night" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f2747"/><stop offset="1" stop-color="#4a5a86"/></linearGradient>
+  <linearGradient id="g-night2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d2a52"/><stop offset="1" stop-color="#7189ad"/></linearGradient>
+  <linearGradient id="g-stone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ddd6c7"/><stop offset="1" stop-color="#b6ae9d"/></linearGradient>
+  <linearGradient id="g-ember" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e78f57"/><stop offset="1" stop-color="#f6cf98"/></linearGradient>
+  <linearGradient id="g-dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b6a8c"/><stop offset="1" stop-color="#d6c3a2"/></linearGradient>
+  <linearGradient id="g-moon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#33466f"/><stop offset="1" stop-color="#a7b8c9"/></linearGradient>
+  <linearGradient id="g-pale" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d3e0c4"/><stop offset="1" stop-color="#f1ecd8"/></linearGradient>
+  <linearGradient id="g-death" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ece0c6"/><stop offset="1" stop-color="#cdb790"/></linearGradient>
+  <linearGradient id="g-devil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#110e15"/><stop offset="1" stop-color="#33263a"/></linearGradient>
+  <linearGradient id="g-sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#86bedc"/><stop offset="1" stop-color="#f2f2e6"/></linearGradient>
+  <linearGradient id="g-wands" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0d6a2"/><stop offset="1" stop-color="#f8efdc"/></linearGradient>
+  <linearGradient id="g-cups" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c6dde2"/><stop offset="1" stop-color="#f3efe1"/></linearGradient>
+  <linearGradient id="g-swords" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cdd8e0"/><stop offset="1" stop-color="#f2efe6"/></linearGradient>
+  <linearGradient id="g-coins" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1da86"/><stop offset="1" stop-color="#f8f0d4"/></linearGradient>
+  <symbol id="s-wands" viewBox="-8 -30 16 60"><g stroke="#2a1f17" stroke-width=".55" stroke-linejoin="round">
+    <path d="M-2.1-28Q0-29.6 2.1-28L2.6 28Q0 29.6-2.6 28Z" fill="#a87447"/>
+    <path d="M-1.4-16l1.4 1M.6 0l1.2 1M-1 12l1.3 1" fill="none"/>
+    <ellipse cx="-4.6" cy="-19" rx="2.9" ry="1.3" transform="rotate(-32 -4.6 -19)" fill="#7d9a52"/>
+    <ellipse cx="4.6" cy="-8" rx="2.9" ry="1.3" transform="rotate(32 4.6 -8)" fill="#7d9a52"/>
+    <ellipse cx="-4.5" cy="4" rx="2.9" ry="1.3" transform="rotate(-32 -4.5 4)" fill="#7d9a52"/>
+    <ellipse cx="4.5" cy="15" rx="2.9" ry="1.3" transform="rotate(32 4.5 15)" fill="#7d9a52"/></g></symbol>
+  <symbol id="s-cups" viewBox="-16 -20 32 40"><g stroke="#2a1f17" stroke-width=".7" stroke-linejoin="round">
+    <path d="M-13-18H13Q13 2 2 5V9Q2 11 6 13L8 16H-8L-6 13Q-2 11-2 9V5Q-13 2-13-18Z" fill="#d9a83c"/>
+    <ellipse cx="0" cy="-18" rx="13" ry="2.5" fill="#f1d98a"/>
+    <path d="M-12.4-10Q0-7 12.4-10" fill="none"/><ellipse cx="0" cy="8" rx="3.4" ry="1.5" fill="#efd27a"/>
+    <path d="M-10 16H10Q11 19 0 19.5Q-11 19-10 16Z" fill="#d9a83c"/></g></symbol>
+  <symbol id="s-swords" viewBox="-8 -30 16 60"><g stroke="#2a1f17" stroke-width=".55" stroke-linejoin="round">
+    <path d="M0-29L2.2-25V14H-2.2V-25Z" fill="#dfe6ea"/><path d="M0-24V12" fill="none" stroke-width=".4"/>
+    <rect x="-6" y="14" width="12" height="2.6" rx="1.2" fill="#d9a83c"/>
+    <rect x="-1.4" y="16.6" width="2.8" height="8.6" fill="#6b4a2f"/><circle cx="0" cy="26.8" r="2.2" fill="#d9a83c"/></g></symbol>
+  <symbol id="s-coins" viewBox="-18 -18 36 36"><g stroke="#2a1f17" stroke-width=".7" stroke-linejoin="round">
+    <circle r="17" fill="#d9a83c"/><circle r="13.6" fill="#efd27a"/>
+    <path d="M0-12L7.05 9.71L-11.41-3.71H11.41L-7.05 9.71Z" fill="none" stroke-width=".8"/></g></symbol>
+</defs></svg>
+
+<header class="top">
+  <h1>Tarot</h1>
+  <p class="sub">Barajá, cortá y elegí tus cartas</p>
+  <div class="orn">✦</div>
+  <nav class="tabs" aria-label="Secciones">
+    <button class="tab active" data-view="tirar">Tirar las cartas</button>
+    <button class="tab" data-view="tiradas">Mis tiradas</button>
+    <button class="tab" data-view="mazo">El mazo</button>
+  </nav>
+</header>
+
+<main>
+  <section id="view-tirar" class="view">
+    <div class="setup">
+      <div class="spreads" id="spreads" role="group" aria-label="Tipo de tirada"></div>
+      <div class="row2">
+        <label class="q"><span>Tu pregunta (opcional)</span><textarea id="question" rows="1" maxlength="400" placeholder="¿Qué querés preguntarle a las cartas?"></textarea></label>
+        <label class="toggle"><input type="checkbox" id="reversals" checked> Incluir cartas invertidas</label>
+      </div>
+    </div>
+    <div class="table" id="table">
+      <p class="hint" id="hint" aria-live="polite"></p>
+      <div class="slots" id="slots"></div>
+      <div class="deckzone" id="deckzone"></div>
+      <div class="actions" id="actions"></div>
+    </div>
+    <div class="reading" id="reading" aria-live="polite"></div>
+    <p class="foot">Mazo de 78 cartas con diseño propio, inspirado en el tarot clásico. Cada vez que barajás, el mazo se mezcla por completo con el generador aleatorio criptográfico de tu navegador: todas las cartas tienen la misma probabilidad de quedar en cualquier lugar, y cada una tiene 50% de probabilidad de salir invertida. Nada está decidido de antemano: la carta que te toca depende de esa mezcla y de la que elegís vos.</p>
+  </section>
+
+  <section id="view-tiradas" class="view" hidden>
+    <h2 class="panel-title">Mis tiradas</h2>
+    <p class="panel-sub">Se guardan solas en este navegador cuando terminás de dar vuelta las cartas.</p>
+    <div class="hist" id="hist"></div>
+  </section>
+
+  <section id="view-mazo" class="view" hidden>
+    <h2 class="panel-title">El mazo</h2>
+    <p class="panel-sub">Las 78 cartas con su significado al derecho e invertidas. Tocá una para leerla.</p>
+    <div class="filters" id="filters"></div>
+    <div class="lib" id="lib"></div>
+  </section>
+</main>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true">
+  <div class="modal-box"><button class="close" id="modal-close" aria-label="Cerrar">×</button><div id="modal-body"></div></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ===== Mazo: datos, significados y dibujo de las cartas ===== */
+const K='#2a1f17', GOLD='#d9a83c', GOLD2='#efd27a', RUST='#a9442f', TEAL='#2f6366', SKY='#a9c8d6',
+  CREAM='#f5edd8', GREEN='#7a9550', DGREEN='#46663a', ROSE='#cf7e6c', STEEL='#cdd6da', BROWN='#8b5a33',
+  SAND='#dcbf8f', NIGHT='#27304f', WHITE='#fbf7ec', GREY='#a39d90', WATER='#86adc2', PURPLE='#6a3d5c',
+  ORANGE='#e0873a', LIGHT='#e8dcc0';
+
+const SUITS = {
+  w:{name:'Bastos', el:'fuego', bg:'g-wands', tall:true,  sym:'s-wands',  ar:16/60},
+  c:{name:'Copas',  el:'agua',  bg:'g-cups',  tall:false, sym:'s-cups',   ar:32/40},
+  s:{name:'Espadas',el:'aire',  bg:'g-swords',tall:true,  sym:'s-swords', ar:16/60},
+  p:{name:'Oros',   el:'tierra',bg:'g-coins', tall:false, sym:'s-coins',  ar:1}
+};
+const RANKS = ['As','Dos','Tres','Cuatro','Cinco','Seis','Siete','Ocho','Nueve','Diez','Sota','Caballero','Reina','Rey'];
+const ROMAN = ['0','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX','XXI'];
+
+/* [nombre, claves al derecho, claves invertida, texto al derecho, texto invertida, sí/no] */
+const MAJ = [
+ ['El Loco','comienzos · libertad · espontaneidad · confianza','imprudencia · miedo a arrancar · distracción','Un comienzo nuevo te está esperando. Es momento de animarte a lo desconocido con curiosidad, aunque no tengas todo resuelto.','Cuidado con saltar sin mirar, o al revés: con quedarte en el mismo lugar por miedo. Buscá el punto medio entre impulso y prudencia.','si'],
+ ['El Mago','iniciativa · habilidad · poder personal · concretar','manipulación · talento sin usar · falta de foco','Tenés todo lo que necesitás para hacer realidad lo que querés. Es momento de usar tus herramientas y pasar a la acción.','Hay energía dispersa o promesas que no se sostienen. Revisá si estás usando tu talento o si alguien te está vendiendo humo.','si'],
+ ['La Sacerdotisa','intuición · misterio · saber interior · paciencia','ignorar la intuición · secretos · desconexión','La respuesta no está afuera: está en lo que sentís. Escuchá tu intuición y no fuerces las cosas; algo todavía se está revelando.','Estás desoyendo lo que ya sabés por dentro, o hay información oculta. Hacé silencio y volvé a escucharte.','quizas'],
+ ['La Emperatriz','abundancia · creatividad · cuidado · fertilidad','bloqueo creativo · descuidarte · dar de más','Momento fértil para crear, disfrutar y cuidar. Lo que sembrás con amor crece: proyectos, vínculos y tu propio bienestar.','Estás dando mucho y recibiendo poco, o descuidando tu bienestar. Volvé a nutrirte primero a vos.','si'],
+ ['El Emperador','estructura · autoridad · orden · estabilidad','rigidez · control excesivo · falta de disciplina','Pide orden, límites claros y decisiones firmes. Construí bases sólidas y tomá las riendas de tu situación.','Hay demasiado control o, al contrario, falta de estructura. También puede hablar de una autoridad que abusa de su poder.','si'],
+ ['El Sumo Sacerdote','tradición · aprendizaje · guía · valores','romper moldes · rebeldía · dogmatismo','Habla de aprender de alguien con experiencia, de seguir caminos probados o de compromisos formales. Buscá un buen consejo.','Las reglas de siempre ya no te sirven. Es momento de cuestionar lo establecido y encontrar tu propia forma.','si'],
+ ['Los Enamorados','amor · elección · unión · valores alineados','desarmonía · indecisión · valores en conflicto','Una elección importante que tiene que salir del corazón y de tus valores. También habla de un vínculo profundo y sincero.','Hay desarmonía en un vínculo o te cuesta decidir. Preguntate qué querés de verdad, no qué se espera de vos.','si'],
+ ['El Carro','avance · determinación · victoria · control','falta de rumbo · obstáculos · frustración','Avanzás con fuerza si mantenés el foco. La victoria llega con voluntad y una dirección clara.','Te sentís sin rumbo o tirando para dos lados a la vez. Frená, definí hacia dónde vas y retomá.','si'],
+ ['La Fuerza','coraje · paciencia · compasión · dominio interior','inseguridad · impulsividad · agotamiento','Tu fuerza está en la calma y la paciencia, no en imponerte. Podés con esto.','Dudás de vos o reaccionás desde el impulso. Volvé a tu centro antes de actuar.','si'],
+ ['El Ermitaño','introspección · búsqueda interior · soledad elegida · sabiduría','aislamiento · encierro · perder el rumbo','Momento de mirar hacia adentro. Tomate un tiempo a solas para encontrar tus propias respuestas.','El retiro se volvió aislamiento. Quizás sea hora de volver a conectar con otras personas.','quizas'],
+ ['La Rueda de la Fortuna','cambio · ciclos · destino · buena suerte','mala racha · resistencia al cambio · patrones repetidos','Las cosas se mueven y empieza un ciclo nuevo. Aprovechá el giro: la suerte está de tu lado.','Una racha difícil o un patrón que se repite. Lo que no podés controlar, soltalo; lo que sí, cambialo.','si'],
+ ['La Justicia','verdad · equilibrio · causa y efecto · decisiones justas','injusticia · no hacerse cargo · deshonestidad','Cada acción tiene su consecuencia. Actuá con honestidad y vas a recibir lo justo.','Algo no está siendo justo, o falta hacerse cargo. Revisá con sinceridad cuál es tu parte.','quizas'],
+ ['El Colgado','pausa · entrega · nueva perspectiva · soltar','estancamiento · resistencia · sacrificio inútil','No es momento de forzar. Una pausa te va a dar una mirada nueva sobre lo que pasa.','Estás esperando demasiado o te resistís a soltar. La espera ya no te está sirviendo.','quizas'],
+ ['La Muerte','final · transformación · cierre · renacer','miedo a soltar · resistencia al cambio · estancamiento','Algo termina para que algo nuevo pueda empezar. No es literal: habla de una transformación profunda.','Te aferrás a algo que ya terminó. Dejarlo ir es justamente lo que te va a liberar.','no'],
+ ['La Templanza','equilibrio · paciencia · moderación · armonía','excesos · desequilibrio · impaciencia','Encontrá el punto medio. Las cosas fluyen si las tomás con calma y con medida.','Algo está desbalanceado: demasiado de una cosa, muy poco de otra. Recuperá tu ritmo.','si'],
+ ['El Diablo','apego · tentación · ataduras · materialismo','liberación · cortar lo que ata · recuperar el control','Algo te está atando: un hábito, un vínculo o un miedo. Reconocerlo es el primer paso para soltarlo.','Estás empezando a liberarte de lo que te limitaba. Seguí por ese camino.','no'],
+ ['La Torre','cambio repentino · revelación · derrumbe · despertar','postergar lo inevitable · miedo al cambio · crisis evitada','Algo se sacude de golpe y deja al descubierto lo que no tenía bases firmes. Duele, pero despeja el terreno.','Estás postergando un cambio inevitable. Mejor acompañarlo que esperar a que se caiga solo.','no'],
+ ['La Estrella','esperanza · sanación · inspiración · fe','desánimo · falta de fe · desconexión','Después de la tormenta llega la calma. Confiá: estás sanando y lo que viene se ve luminoso.','Perdiste un poco la esperanza. Volvé a lo que te inspira y date tiempo.','si'],
+ ['La Luna','ilusión · miedo · intuición · confusión','claridad que llega · miedos que se disuelven · verdad revelada','No todo es lo que parece. Hay miedos o confusión: avanzá despacio y confiá en tu intuición.','La niebla empieza a levantarse y ves las cosas más claras. Los miedos pierden fuerza.','quizas'],
+ ['El Sol','alegría · éxito · vitalidad · claridad','alegría postergada · cansancio · expectativas muy altas','Una de las mejores cartas del mazo: éxito, alegría y claridad. Todo se ilumina.','La alegría está, pero algo la nubla. Puede ser cansancio o expectativas demasiado altas.','si'],
+ ['El Juicio','renacer · llamado interior · balance · perdón','autocrítica · dudas · ignorar el llamado','Es momento de hacer un balance y responder a un llamado interior. Se abre una segunda oportunidad.','Te juzgás demasiado o no escuchás lo que te pide el alma. Perdonate y seguí.','si'],
+ ['El Mundo','logro · plenitud · cierre de ciclo · integración','algo sin terminar · falta de cierre · atajos','Un ciclo se completa con éxito. Celebrá lo que lograste antes de empezar lo próximo.','Falta un último paso para cerrar. No te quedes a mitad de camino.','si']
+];
+
+/* [claves al derecho, claves invertida, texto al derecho, texto invertida, sí/no] — As..Diez, Sota, Caballero, Reina, Rey */
+const MIN = {
+ w:[
+  ['inspiración · nuevo proyecto · impulso · potencial','demoras · desgano · ideas que no arrancan','Una chispa nueva: una idea, un proyecto o una pasión que quiere nacer. Aprovechá ese impulso.','La energía está, pero algo la frena. Revisá si es miedo o falta de un plan.','si'],
+  ['planificación · decisiones · mirar a futuro · salir de la zona de confort','miedo a lo desconocido · falta de plan','Tenés el mundo en tus manos y te toca decidir hacia dónde ir. Planificá tu próximo paso.','Te quedás en lo conocido por miedo. Animate a mirar más lejos.','si'],
+  ['expansión · visión · progreso · oportunidades','demoras · obstáculos · falta de visión','Lo que sembraste empieza a dar frutos y aparecen nuevas oportunidades. Pensá en grande.','Las cosas tardan más de lo esperado. Paciencia, y ajustá el plan.','si'],
+  ['celebración · hogar · armonía · logros','tensiones en casa · falta de apoyo · transición','Momento de festejar con los tuyos. Hay estabilidad, hogar y algo para celebrar.','Tensiones en casa o en tu grupo. Buscá reconectar desde la armonía.','si'],
+  ['competencia · roces · desacuerdos · tensión','evitar el conflicto · acuerdos · tensión interna','Muchas voces, roces y competencia. Puede ser un desafío que te haga crecer si no te lo tomás personal.','El conflicto se calma, o lo estás evitando. Decí lo que tengas que decir.','quizas'],
+  ['victoria · reconocimiento · éxito · confianza','falta de reconocimiento · ego · caída','Llega el reconocimiento por tu esfuerzo. Disfrutá el logro.','Sentís que no te valoran, o el ego se infló. Volvé a lo esencial.','si'],
+  ['defensa · perseverancia · sostener tu postura','agotamiento · ganas de rendirte · todo en contra','Te toca defender lo tuyo. Mantenete firme: tenés la ventaja.','Te cansaste de pelear. Elegí bien qué batallas valen la pena.','quizas'],
+  ['rapidez · movimiento · noticias · avance','demoras · frustración · apuro','Todo se acelera: noticias, viajes o avances rápidos. Subite a la ola.','Las cosas se traban o vas demasiado rápido. Bajá un cambio.','si'],
+  ['resiliencia · perseverancia · último esfuerzo','cansancio · desconfianza · ganas de abandonar','Estás cerca de la meta aunque te sientas sin fuerzas. Un último esfuerzo.','El cansancio te pone a la defensiva. Pedí ayuda: no tenés que poder con todo.','quizas'],
+  ['carga · responsabilidad · estrés · esfuerzo','soltar cargas · delegar · liberarse','Estás cargando demasiado. Revisá qué de todo eso es realmente tuyo.','Empezás a soltar lo que te pesaba. Delegá sin culpa.','no'],
+  ['entusiasmo · exploración · ideas nuevas · mensajes','impaciencia · ideas sin rumbo · poca constancia','Curiosidad y ganas de empezar algo. Puede llegar una noticia que te entusiasme.','Mucho entusiasmo y poca constancia. Elegí una idea y sostenela.','si'],
+  ['acción · aventura · pasión · impulso','impulsividad · apuro · falta de dirección','Energía arrolladora para ir por lo que querés. Movimiento, viajes, aventura.','Te lanzás sin pensar o dejás todo a medias. Canalizá esa fuerza.','si'],
+  ['confianza · carisma · determinación · calidez','inseguridad · celos · desgaste','Brillás con luz propia. Confiá en tu magnetismo y en tu capacidad de liderar con calidez.','Dudás de tu brillo o te desgastás por los demás. Volvé a vos.','si'],
+  ['liderazgo · visión · emprender · inspiración','autoritarismo · impulsividad · exigencia excesiva','Liderazgo con visión. Es momento de tomar las riendas y emprender en grande.','Cuidado con querer controlarlo todo o exigir demasiado.','si']
+ ],
+ c:[
+  ['amor nuevo · emociones · intuición · compasión','emociones guardadas · vacío · amor propio pendiente','Se abre el corazón: un amor nuevo, una amistad o una emoción profunda. Dejala fluir.','Estás guardando lo que sentís. Empezá por darte amor a vos.','si'],
+  ['unión · conexión · pareja · reciprocidad','desequilibrio · distancia · falta de conexión','Una conexión mutua y sincera. Atracción, un acuerdo o una relación que se fortalece.','El vínculo está desparejo. Hablen de lo que no se está diciendo.','si'],
+  ['amistad · celebración · comunidad · alegría','excesos · chismes · aislamiento','Festejos y gente linda alrededor. Disfrutá tus amistades.','Cuidado con los chismes o los excesos. Elegí bien con quién compartís.','si'],
+  ['apatía · desgano · contemplación · oportunidades sin ver','despertar · ganas nuevas · aceptar lo que llega','El desgano no te deja ver lo que se te ofrece. Mirá alrededor: hay más de lo que creés.','Vuelven las ganas y te abrís a lo nuevo.','quizas'],
+  ['pérdida · tristeza · decepción · duelo','aceptación · seguir adelante · perdón','Algo dolió y está bien sentirlo. Pero no todo está perdido: todavía quedan copas en pie.','Empezás a aceptar lo que pasó y a mirar lo que sí tenés.','no'],
+  ['nostalgia · recuerdos · infancia · inocencia','vivir en el pasado · idealizar · soltar','Recuerdos lindos, alguien del pasado o la vuelta a lo simple. Conectá con tu lado más inocente.','Te quedás en el pasado. Llevate lo bueno y seguí.','si'],
+  ['opciones · ilusiones · fantasía · elección','claridad · decidir · bajar a tierra','Muchas opciones y no todas son reales. Elegí con los pies en la tierra.','Se aclara qué es real y qué es fantasía. Es momento de decidir.','quizas'],
+  ['partir · dejar atrás · buscar más · desilusión','miedo a irse · quedarse por costumbre · volver','Algo ya no te llena y es tiempo de ir a buscar lo que sí. Duele, pero es necesario.','Te quedás por miedo o por costumbre. Preguntate si de verdad querés estar ahí.','no'],
+  ['deseo cumplido · satisfacción · gratitud','insatisfacción · excesos · deseos superficiales','La carta de los deseos: lo que pediste puede cumplirse. Disfrutá y agradecé.','Conseguiste lo que querías y aun así algo falta. Revisá qué deseás de verdad.','si'],
+  ['familia · felicidad · armonía · plenitud','tensiones familiares · expectativas · desconexión','Armonía en casa y en tus vínculos. Felicidad compartida.','Hay tensiones en la familia, o la idea de la familia perfecta te pesa.','si'],
+  ['sensibilidad · creatividad · mensajes de amor · intuición','inmadurez emocional · bloqueo creativo · inseguridad','Una noticia afectiva, una propuesta creativa o una intuición que te sorprende. Abrite a sentir.','Emociones a flor de piel o creatividad trabada. Date espacio.','si'],
+  ['romance · propuestas · encanto · idealismo','promesas vacías · celos · cambios de humor','Llega una propuesta o alguien con intenciones románticas. Seguí al corazón, con los ojos abiertos.','Mucho encanto y poco compromiso. Mirá los hechos, no solo las palabras.','si'],
+  ['empatía · intuición · contención · sensibilidad','dependencia emocional · cargar lo ajeno · inseguridad','Tu sensibilidad es tu fuerza. Escuchá tu intuición y cuidá a los demás sin olvidarte de vos.','Te estás cargando emociones ajenas. Poné límites con amor.','si'],
+  ['equilibrio emocional · calma · diplomacia · madurez','manipulación emocional · frialdad · desborde','Manejás tus emociones con madurez. Calma y sabiduría para acompañar a otros.','Emociones reprimidas que pueden desbordarse. Expresalas de forma sana.','si']
+ ],
+ s:[
+  ['claridad · verdad · ideas nuevas · decisión','confusión · malentendidos · ideas trabadas','Llega la claridad: ves la verdad y podés decidir con la cabeza fría.','Hay confusión o malentendidos. No decidas hasta tener toda la información.','si'],
+  ['indecisión · bloqueo · evitar · estancamiento','decidir · información que aparece · salir del bloqueo','Estás evitando una decisión. Sacate la venda: elegir también es avanzar.','Por fin aparece lo que te faltaba para decidir.','quizas'],
+  ['dolor · desamor · tristeza · verdad que duele','sanación · perdón · superar el dolor','Un dolor del corazón o una verdad que lastima. Permitite sentirlo para poder sanarlo.','La herida empieza a cerrar. Estás saliendo adelante.','no'],
+  ['descanso · recuperación · pausa · reflexión','agotamiento · inquietud · volver de a poco','Tu cuerpo y tu mente piden descanso. Parar también es parte del camino.','Te cuesta descansar, o ya es hora de volver a la acción de a poco.','quizas'],
+  ['conflicto · ganar a cualquier precio · tensión · derrota','reconciliación · dejar atrás peleas · arrepentimiento','Una pelea en la que nadie gana del todo. ¿Vale la pena tener razón?','Es momento de hacer las paces o de soltar una discusión vieja.','no'],
+  ['transición · dejar atrás · viaje · alivio','resistencia a irse · temas pendientes · estancamiento','Te alejás de una etapa difícil hacia aguas más tranquilas. Lo peor ya pasó.','Querés avanzar pero algo te retiene. Resolvé lo pendiente.','si'],
+  ['estrategia · engaño · secretos · astucia','confesión · verdad que sale · culpa','Alguien no está siendo del todo honesto, o te toca actuar con estrategia. Ojo con lo que se dice a escondidas.','Las cartas salen a la luz. Es mejor decir la verdad.','no'],
+  ['sentirte sin salida · limitaciones · miedo','liberación · nuevas perspectivas · recuperar poder','Te sentís sin salida, pero muchas de esas limitaciones están en tu cabeza. Hay una salida.','Empezás a ver la salida y a liberarte de tus propios miedos.','no'],
+  ['ansiedad · preocupación · insomnio · miedo','alivio · pedir ayuda · miedos que pierden fuerza','La ansiedad agranda las cosas. Lo que te quita el sueño probablemente no sea tan grave.','Empezás a ver luz. Hablarlo con alguien te va a aliviar.','no'],
+  ['final doloroso · tocar fondo · cierre · traición','recuperación · resurgir · lo peor ya pasó','Tocaste fondo: algo terminó de manera definitiva. Desde acá, solo se puede subir.','Lo peor ya pasó y empezás a levantarte.','no'],
+  ['curiosidad · ideas nuevas · comunicación · estar alerta','chismes · palabras hirientes · dispersión','Mente despierta y ganas de aprender. Prestá atención a lo que se dice.','Cuidado con los chismes o con hablar sin pensar.','quizas'],
+  ['determinación · rapidez · ambición · franqueza','impulsividad · agresividad · apuro','Vas directo al objetivo, rápido y con decisión. Ideal para actuar, sin llevarte puesto a nadie.','Mucha velocidad y poco cuidado. Pensá antes de hablar o actuar.','si'],
+  ['independencia · claridad · honestidad · límites','frialdad · crítica dura · amargura','Ves las cosas con claridad y decís la verdad con elegancia. Tu independencia es valiosa.','La dureza te está alejando. Un poco de suavidad no te quita fuerza.','quizas'],
+  ['autoridad · verdad · lógica · ética','abuso de poder · manipulación · frialdad','Decisiones con la cabeza fría y una ética clara. Buen momento para pensar con objetividad.','Cuidado con la manipulación o con usar la razón para lastimar.','si']
+ ],
+ p:[
+  ['oportunidad concreta · prosperidad · trabajo nuevo · abundancia','oportunidad perdida · falta de plan · gastos','Una oportunidad concreta: trabajo, dinero o un proyecto con bases sólidas. Sembrá.','Una oportunidad que se escapa por falta de planificación. Cuidá tus recursos.','si'],
+  ['equilibrio · malabares · adaptación · prioridades','desorden · sobrecarga · deudas','Estás haciendo malabares con muchas cosas. Ordená prioridades y fluí.','Demasiadas cosas a la vez. Algo se te puede caer si no te organizás.','quizas'],
+  ['trabajo en equipo · aprendizaje · calidad · reconocimiento','poca colaboración · trabajo a medias · desorganización','El trabajo en equipo da frutos. Tu talento es reconocido.','Falta coordinación o compromiso en el equipo.','si'],
+  ['seguridad · ahorro · control · conservar','avaricia · miedo a perder · soltar el control','Cuidás lo que tenés y buscás seguridad. Ahorrar está bien; aferrarse, no tanto.','El miedo a perder te cierra. Abrite a dar y recibir.','quizas'],
+  ['dificultad económica · carencia · sentirse afuera · preocupación','recuperación · ayuda que llega · salir de la crisis','Un momento de escasez o de sentirte afuera. La ayuda está más cerca de lo que creés: pedila.','Lo peor de la crisis va quedando atrás.','no'],
+  ['generosidad · dar y recibir · ayuda · equilibrio','deudas · desigualdad · dar con condiciones','Dar y recibir en equilibrio. Ayuda que llega o que podés ofrecer.','El intercambio está desparejo. Revisá quién da y quién recibe.','si'],
+  ['paciencia · inversión · evaluar · crecimiento lento','impaciencia · esfuerzo sin resultados · replantear','Sembraste y ahora toca esperar. Evaluá cómo va todo con paciencia.','Sentís que tanto esfuerzo no rinde. Quizás haya que cambiar la estrategia.','quizas'],
+  ['dedicación · oficio · práctica · perfeccionamiento','perfeccionismo · rutina · falta de foco','Práctica y dedicación: estás mejorando en lo tuyo paso a paso.','El perfeccionismo o la rutina te están frenando.','si'],
+  ['independencia · logro · disfrute · autosuficiencia','dependencia · gastos de más · inseguridad','Disfrutás de lo que construiste con tu esfuerzo. Independencia y bienestar.','Revisá si dependés demasiado de otros o si gastás más de lo que conviene.','si'],
+  ['legado · estabilidad · familia · prosperidad duradera','conflictos por dinero · inestabilidad · herencias','Estabilidad a largo plazo, familia y una prosperidad que perdura.','Conflictos por dinero o herencias, o bases que no son tan firmes.','si'],
+  ['aprendizaje · estudios · oportunidades · ambición','postergar · poco progreso · desinterés','Ganas de aprender algo nuevo o un proyecto que arranca. Paso a paso.','Estás postergando lo que tenés que estudiar o empezar.','si'],
+  ['constancia · responsabilidad · rutina · trabajo duro','estancamiento · aburrimiento · pereza','Despacio pero seguro. La constancia es tu mejor aliada.','La rutina te aburre o te estancaste. Recuperá la motivación.','si'],
+  ['practicidad · cuidado · abundancia · hogar','descuidarte · desequilibrio trabajo-casa · dependencia','Cuidás tus recursos y a los tuyos con calidez y sentido práctico.','Te estás descuidando por atender todo lo demás.','si'],
+  ['prosperidad · seguridad · éxito · generosidad','materialismo · terquedad · mala administración','Éxito material y estabilidad. Sabés hacer crecer lo que tocás.','Cuidado con priorizar solo lo material o con la terquedad.','si']
+ ]
+};
+
+const DECK = [];
+MAJ.forEach((m,i)=>DECK.push({id:'m'+i, arc:'M', n:i, name:m[0], up:m[1], rev:m[2], upT:m[3], revT:m[4], yn:m[5]}));
+for (const s of 'wcsp') MIN[s].forEach((m,i)=>DECK.push({id:s+(i+1), arc:s, n:i+1, name:RANKS[i]+' de '+SUITS[s].name, up:m[0], rev:m[1], upT:m[2], revT:m[3], yn:m[4]}));
+const BY_ID = Object.fromEntries(DECK.map(c=>[c.id,c]));
+
+/* ---------- helpers de dibujo ---------- */
+const f1 = n => Math.round(n*10)/10;
+const pt = (cx,cy,r,deg) => [f1(cx + r*Math.cos(deg*Math.PI/180)), f1(cy + r*Math.sin(deg*Math.PI/180))];
+function starD(cx,cy,R,r,n=5,rot=-90){ let d=''; for(let i=0;i<2*n;i++){ const [x,y]=pt(cx,cy,i%2?r:R, rot+i*180/n); d+=(i?'L':'M')+x+' '+y; } return d+'Z'; }
+function pentD(cx,cy,r,rot=-90){ const p=[0,1,2,3,4].map(i=>pt(cx,cy,r,rot+i*72)); return [0,2,4,1,3].map((k,i)=>(i?'L':'M')+p[k][0]+' '+p[k][1]).join('')+'Z'; }
+function rays(cx,cy,r1,r2,n,off=0,from=0,to=360){ let s=''; for(let i=0;i<n;i++){ const a=from+off+i*(to-from)/n; const [x1,y1]=pt(cx,cy,r1,a),[x2,y2]=pt(cx,cy,r2,a); s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`; } return s; }
+function triRays(cx,cy,r1,r2,n,fill,off=0,hw=6){ let s=''; for(let i=0;i<n;i++){ const a=off+i*360/n; const [ax,ay]=pt(cx,cy,r1,a-hw),[bx,by]=pt(cx,cy,r1,a+hw),[tx,ty]=pt(cx,cy,r2,a); s+=`<path d="M${ax} ${ay}L${tx} ${ty}L${bx} ${by}Z" fill="${fill}"/>`; } return s; }
+const cloud = (x,y,s=1,fill=WHITE) => `<path transform="translate(${x} ${y}) scale(${s})" stroke-width="${f1(1.5/s)}" d="M-24 8a9 9 0 0 1 2-16a11 11 0 0 1 18-8a12 12 0 0 1 20 4a9 9 0 0 1 8 20z" fill="${fill}"/>`;
+function rose(cx,cy,r,fill=WHITE){ let s=''; for(let i=0;i<5;i++){ const [x,y]=pt(cx,cy,r*.52,i*72-90); s+=`<circle cx="${x}" cy="${y}" r="${f1(r*.52)}" fill="${fill}"/>`; } return s+`<circle cx="${cx}" cy="${cy}" r="${f1(r*.3)}" fill="${GOLD2}"/>`; }
+const dbl = (d,col,w=4) => `<path d="${d}" fill="none" stroke="${K}" stroke-width="${f1(w+2.4)}"/><path d="${d}" fill="none" stroke="${col}" stroke-width="${w}"/>`;
+const drop = (x,y,s=1,fill=GOLD2) => `<path transform="translate(${x} ${y}) scale(${s})" stroke-width="${f1(1.2/s)}" d="M0-7C2-3 4 0 4 2.5A4 4 0 0 1-4 2.5C-4 0-2-3 0-7Z" fill="${fill}"/>`;
+const flame = (x,y,s=1,fill=ORANGE) => `<path transform="translate(${x} ${y}) scale(${s})" stroke-width="${f1(1.3/s)}" d="M0 6C-5 4-6-2 0-10C1-5 6-3 4 2C3 5 2 6 0 6Z" fill="${fill}"/>`;
+const crownSm = `<path d="M-12 4L-14-7L-6-1L0-10L6-1L14-7L12 4Z" fill="${GOLD}"/><rect x="-12" y="3" width="24" height="5" fill="${GOLD2}"/>`;
+const useSym = (s,x,y,h) => { const w=h*SUITS[s].ar; return `<use href="#${SUITS[s].sym}" x="${f1(x-w/2)}" y="${f1(y-h/2)}" width="${f1(w)}" height="${f1(h)}"/>`; };
+const T = (x,y,txt,size=14,fill=K) => `<text x="${x}" y="${y}" text-anchor="middle" class="t-lt" font-size="${size}" fill="${fill}" stroke="none">${txt}</text>`;
+
+/* ---------- Arcanos mayores: emblemas originales (panel 168×248) ---------- */
+const MAJ_BG = ['g-dawn','g-gold','g-night','g-sky','g-ember','g-stone','g-sky','g-gold','g-gold','g-dusk','g-sky','g-stone','g-pale','g-death','g-sky','g-devil','g-night','g-night2','g-moon','g-sun','g-sky','g-sky'];
+const ART = [
+ /* 0 El Loco */ () => `${rays(130,40,22,34,16)}<circle cx="130" cy="40" r="17" fill="${GOLD2}"/>
+  <path d="M44 248L80 196L96 210L120 182L146 212L168 198V248Z" fill="#eef0ea"/>
+  <path d="M0 248V178Q26 168 58 172L98 184Q104 198 92 210L86 248Z" fill="#c09263"/>
+  <path d="M18 192l8 22M44 188l-5 28M70 196l6 30" fill="none" stroke-width="1"/>
+  ${dbl('M34 172L112 88',BROWN,3.2)}
+  <path d="M104 86q-15 2-14 18q4 15 21 11q13-6 7-21q-5-10-14-8z" fill="${RUST}"/><path d="M107 89q6-2 9-8" fill="none"/>
+  <path d="M58 132q-5 16 3 34" fill="none" stroke="${DGREEN}" stroke-width="2"/><path d="M58 150q-10-2-12 6q8 2 12-6z" fill="${GREEN}"/>
+  ${rose(58,120,13,WHITE)}`,
+ /* 1 El Mago */ () => `${rose(16,16,11,RUST)}${rose(152,16,11,RUST)}${rose(38,9,8,RUST)}${rose(130,9,8,RUST)}
+  <path d="M60 38C60 23 80 23 84 38C88 53 108 53 108 38C108 23 88 23 84 38C80 53 60 53 60 38Z" fill="none" stroke-width="2.8"/>
+  ${rays(84,72,12,19,8,22.5)}
+  <rect x="79" y="70" width="10" height="98" rx="5" fill="${WHITE}"/><circle cx="84" cy="70" r="7" fill="${WHITE}"/><circle cx="84" cy="168" r="7" fill="${WHITE}"/>
+  <rect x="8" y="194" width="152" height="15" rx="2" fill="${RUST}"/><rect x="16" y="209" width="11" height="39" fill="${RUST}"/><rect x="141" y="209" width="11" height="39" fill="${RUST}"/>
+  ${useSym('w',30,173,40)}${useSym('c',60,179,30)}${useSym('s',108,173,40)}${useSym('p',138,181,25)}`,
+ /* 2 La Sacerdotisa */ () => { let pg=''; for(let r=0;r<8;r++) for(let c=0;c<3;c++){ const x=54+c*30+(r%2?15:0), y=16+r*31; if(x>118) continue; pg+=`<circle cx="${x}" cy="${y}" r="4.5" fill="${RUST}" stroke-width="1"/><path d="M${x-5} ${y-6}l5 3 5-3" fill="none" stroke="${GREEN}" stroke-width="1.2"/>`; }
+  return `<rect x="40" y="0" width="88" height="248" fill="#3e5374"/>${pg}
+  <rect x="10" y="34" width="30" height="214" fill="#1d1915"/><rect x="6" y="24" width="38" height="12" fill="#1d1915"/>
+  <rect x="128" y="34" width="30" height="214" fill="${WHITE}"/><rect x="124" y="24" width="38" height="12" fill="${WHITE}"/>
+  ${T(25,122,'B',20,WHITE)}${T(143,122,'J',20)}
+  <path d="M63 60A12 12 0 0 0 63 84A7 12 0 0 1 63 60Z" fill="${WHITE}"/><path d="M105 60A12 12 0 0 1 105 84A7 12 0 0 0 105 60Z" fill="${WHITE}"/>
+  <circle cx="84" cy="72" r="11" fill="${WHITE}"/>
+  <rect x="62" y="118" width="44" height="36" fill="${CREAM}"/><rect x="56" y="114" width="8" height="44" rx="4" fill="${CREAM}"/><rect x="104" y="114" width="8" height="44" rx="4" fill="${CREAM}"/>
+  ${T(84,141,'TORA',12)}
+  <path d="M50 206A34 34 0 0 0 118 206A32 22 0 0 1 50 206Z" fill="${GOLD2}"/>`; },
+ /* 3 La Emperatriz */ () => { let s=`<ellipse cx="20" cy="118" rx="14" ry="50" fill="${DGREEN}"/><ellipse cx="148" cy="118" rx="14" ry="50" fill="${DGREEN}"/>
+  <path d="M20 168V200M148 168V200" fill="none" stroke-width="3"/><path d="M0 196Q84 182 168 196V248H0Z" fill="#e3c26c"/>`;
+  const off=[0,4,2,6,1,5]; let i=0;
+  for(let x=8;x<168;x+=15,i++){ const top=212+off[i%6]; s+=`<path d="M${x} 248V${top}" fill="none" stroke-width="1"/>`; for(let k=0;k<3;k++){ const y=top+3+k*7; s+=`<ellipse cx="${x-2.6}" cy="${y}" rx="2.3" ry="4" fill="${GOLD}" stroke-width=".8"/><ellipse cx="${x+2.6}" cy="${y}" rx="2.3" ry="4" fill="${GOLD}" stroke-width=".8"/>`; } }
+  for(let j=0;j<12;j++){ const [x,y]=pt(84,118,64,-160+j*140/11); s+=`<path d="${starD(x,y,5.5,2.3)}" fill="${WHITE}" stroke-width="1"/>`; }
+  return s+`<path d="M84 186C38 156 42 106 66 104C78 103 84 114 84 120C84 114 90 103 102 104C126 106 130 156 84 186Z" fill="${ROSE}"/>
+  <circle cx="84" cy="134" r="10" fill="none" stroke-width="2.6"/><path d="M84 144V164M75 154H93" fill="none" stroke-width="2.6"/>`; },
+ /* 4 El Emperador */ () => `<path d="M0 248V198L22 170L40 190L62 158L84 194L106 164L128 190L148 166L168 184V248Z" fill="#b8673f"/>
+  <rect x="36" y="90" width="96" height="124" fill="#cbc3b2"/><rect x="30" y="78" width="108" height="12" fill="#cbc3b2"/>
+  <circle cx="32" cy="80" r="10" fill="${WHITE}"/><path d="M27 80a5 5 0 1 0 5-5" fill="none"/>
+  <circle cx="136" cy="80" r="10" fill="${WHITE}"/><path d="M141 80a5 5 0 1 1-5-5" fill="none"/>
+  ${dbl('M84 124V200M66 136H102',GOLD,5)}
+  <ellipse cx="84" cy="110" rx="11" ry="15" fill="none" stroke="${K}" stroke-width="8.4"/><ellipse cx="84" cy="110" rx="11" ry="15" fill="none" stroke="${GOLD}" stroke-width="5"/>
+  <circle cx="116" cy="198" r="10" fill="${GOLD2}"/>${dbl('M116 188V177M111 181H121',GOLD,2.4)}`,
+ /* 5 El Sumo Sacerdote */ () => { const key=(col,fl)=>{ const d=fl?-1:1; return `${dbl('M0-26V30',col,4)}<circle cx="0" cy="-34" r="9" fill="none" stroke="${K}" stroke-width="7.4"/><circle cx="0" cy="-34" r="9" fill="none" stroke="${col}" stroke-width="4.4"/><path d="M${2*d} 16h${10*d}v6h${-10*d}ZM${2*d} 25h${7*d}v4h${-7*d}Z" fill="${col}"/>`; };
+  return `<rect x="8" y="26" width="24" height="222" fill="#a49d90"/><rect x="4" y="18" width="32" height="10" fill="#a49d90"/>
+  <rect x="136" y="26" width="24" height="222" fill="#a49d90"/><rect x="132" y="18" width="32" height="10" fill="#a49d90"/>
+  ${dbl('M84 34V168M72 56H96M66 70H102M60 84H108',GOLD,4.5)}
+  <g transform="translate(84 210) rotate(-36)">${key(GOLD,false)}</g><g transform="translate(84 210) rotate(36)">${key(STEEL,true)}</g>`; },
+ /* 6 Los Enamorados */ () => { const wing='M72 58C44 40 20 48 8 72C26 64 40 66 52 74C40 78 30 86 26 98C44 86 58 82 72 74Z';
+  const fl=[[28,138],[18,150],[38,150],[22,128],[34,126],[28,116],[14,138],[42,138]].map(([x,y])=>flame(x,y,1)).join('');
+  return `${rays(84,42,19,32,24)}<path d="${wing}" fill="${ROSE}"/><path d="${wing}" fill="${ROSE}" transform="translate(168 0) scale(-1 1)"/>
+  <circle cx="84" cy="42" r="16" fill="${GOLD2}"/>
+  <path d="M0 214Q84 204 168 214V248H0Z" fill="${GREEN}"/><path d="M56 214L84 150L112 214Z" fill="#c09263"/>
+  ${dbl('M28 214V150',BROWN,3)}${fl}
+  ${dbl('M140 214V160',BROWN,3)}<circle cx="140" cy="140" r="22" fill="${GREEN}"/>
+  <circle cx="132" cy="132" r="3.4" fill="${RUST}"/><circle cx="148" cy="136" r="3.4" fill="${RUST}"/><circle cx="138" cy="150" r="3.4" fill="${RUST}"/><circle cx="151" cy="150" r="3" fill="${RUST}"/>
+  <path d="M140 204c-8-4 8-10 0-14s8-10 0-14" fill="none" stroke="${TEAL}" stroke-width="2.4"/>
+  <circle cx="76" cy="196" r="12" fill="none" stroke="${K}" stroke-width="6.4"/><circle cx="76" cy="196" r="12" fill="none" stroke="${GOLD}" stroke-width="4"/>
+  <circle cx="92" cy="196" r="12" fill="none" stroke="${K}" stroke-width="6.4"/><circle cx="92" cy="196" r="12" fill="none" stroke="${GOLD}" stroke-width="4"/>`; },
+ /* 7 El Carro */ () => { let st=''; [[34,32],[56,40],[78,30],[100,40],[122,32],[138,41]].forEach(([x,y])=>st+=`<path d="${starD(x,y,4,1.6)}" fill="${WHITE}" stroke="none"/>`);
+  let sc='M22 48'; for(let i=0;i<6;i++) sc+='q10.3 8 20.7 0';
+  return `<path d="M0 132V112H10V100H22V116H34V96H48V118H120V104H132V92H146V114H158V106H168V132Z" fill="#d8ceb6"/>
+  <rect x="22" y="22" width="124" height="26" fill="${NIGHT}"/>${st}<path d="${sc}" fill="${NIGHT}"/>
+  <rect x="26" y="52" width="8" height="68" fill="#c2c9cc"/><rect x="134" y="52" width="8" height="68" fill="#c2c9cc"/>
+  <path d="M0 226H168V248H0Z" fill="${SAND}"/>
+  <rect x="22" y="118" width="124" height="70" fill="#c2c9cc"/>
+  <path d="M74 152q-20-12-36-2q16 2 20 8q-12 0-16 7q18-2 32-8z" fill="${SKY}"/><path d="M94 152q20-12 36-2q-16 2-20 8q12 0 16 7q-18-2-32-8z" fill="${SKY}"/>
+  <circle cx="84" cy="152" r="9" fill="${GOLD2}"/>
+  <circle cx="46" cy="204" r="22" fill="#b98a5c"/>${rays(46,204,5,22,8)}<circle cx="46" cy="204" r="5" fill="${GOLD}"/>
+  <circle cx="122" cy="204" r="22" fill="#b98a5c"/>${rays(122,204,5,22,8)}<circle cx="122" cy="204" r="5" fill="${GOLD}"/>`; },
+ /* 8 La Fuerza */ () => { let g=''; for(let i=0;i<7;i++){ const x=24+i*20, y=f1(208+12*Math.sin(i/6*Math.PI)); if(i<6) g+=`<ellipse cx="${x+10}" cy="${f1(y+3)}" rx="6" ry="3" fill="${GREEN}" stroke-width="1"/>`; g+=rose(x,y,7,RUST); }
+  return `<path d="M60 34C60 22 80 22 84 34C88 46 108 46 108 34C108 22 88 22 84 34C80 46 60 46 60 34Z" fill="none" stroke-width="2.4"/>
+  <path d="${starD(84,140,54,44,20)}" fill="#c77a32"/>
+  <circle cx="62" cy="110" r="9" fill="#e6ae5c"/><circle cx="106" cy="110" r="9" fill="#e6ae5c"/>
+  <circle cx="84" cy="142" r="33" fill="#e8b462"/>
+  <path d="M68 132q6-5 12 0M88 132q6-5 12 0" fill="none" stroke-width="2"/>
+  <circle cx="74" cy="134" r="2" fill="${K}"/><circle cx="94" cy="134" r="2" fill="${K}"/>
+  <path d="M77 146h14l-7 8z" fill="#7a3e2a"/><path d="M84 154v6M84 160q-8 7-15 1M84 160q8 7 15 1" fill="none"/>
+  <path d="M64 154h-12M64 159l-11 4M104 154h12M104 159l11 4" fill="none" stroke-width="1"/>
+  ${g}`; },
+ /* 9 El Ermitaño */ () => `<path d="M0 248V214L36 188L66 204L108 172L168 208V248Z" fill="${WHITE}"/>
+  <path d="M108 172L98 196L112 190L118 206M36 188L46 204" fill="none" stroke-width="1"/>
+  <circle cx="58" cy="118" r="42" fill="${GOLD2}" opacity=".35" stroke="none"/>
+  ${dbl('M126 46L112 240',BROWN,4)}
+  <path d="M58 72V91" fill="none"/><circle cx="58" cy="68" r="4" fill="none"/>
+  <path d="M44 102L58 90L72 102Z" fill="${GREY}"/><rect x="46" y="102" width="24" height="34" fill="${GOLD2}"/><path d="M44 136H72L68 143H48Z" fill="${GREY}"/>
+  <path d="M58 109L65 122H51ZM58 127L51 114H65Z" fill="${WHITE}" stroke-width="1"/>`,
+ /* 10 La Rueda de la Fortuna */ () => { let dots=''; [45,135,225,315].forEach(a=>{ const [x,y]=pt(84,124,49,a-90); dots+=`<circle cx="${x}" cy="${y}" r="2.2" fill="${K}" stroke="none"/>`; });
+  return `${cloud(26,28,.8)}${cloud(142,28,.8)}${cloud(26,224,.8)}${cloud(142,224,.8)}
+  ${dbl('M14 62C30 82 4 102 18 122S8 162 22 186',TEAL,3)}
+  <circle cx="84" cy="124" r="58" fill="${GOLD2}"/><circle cx="84" cy="124" r="40" fill="#f4e2a6"/>
+  ${rays(84,124,12,40,8,22.5)}<circle cx="84" cy="124" r="12" fill="${GOLD2}"/>
+  ${T(84,80,'T')}${T(133,129,'A')}${T(84,178,'R')}${T(35,129,'O')}${dots}`; },
+ /* 11 La Justicia */ () => `<rect x="30" y="0" width="108" height="248" fill="${PURPLE}"/>
+  <path d="M48 0V248M66 0V248M102 0V248M120 0V248" fill="none" stroke="#8a5878" stroke-width="2"/>
+  <rect x="6" y="20" width="24" height="228" fill="#a49d90"/><rect x="138" y="20" width="24" height="228" fill="#a49d90"/>
+  <path d="M0 214H168V248H0Z" fill="#c2b9a8"/>
+  ${dbl('M36 72H132',GOLD,3.4)}
+  <path d="M40 72L30 112M40 72L50 112M128 72L118 112M128 72L138 112" fill="none" stroke-width="1"/>
+  <path d="M26 112Q40 128 54 112Z" fill="${GOLD2}"/><path d="M114 112Q128 128 142 112Z" fill="${GOLD2}"/>
+  <path d="M84 22L91 36V150H77V36Z" fill="${STEEL}"/><path d="M84 38V146" fill="none" stroke-width="1"/>
+  <rect x="62" y="150" width="44" height="8" rx="3" fill="${GOLD}"/><rect x="80" y="158" width="8" height="28" fill="${BROWN}"/><circle cx="84" cy="191" r="6" fill="${GOLD}"/>`,
+ /* 12 El Colgado */ () => `<path d="M0 222Q84 208 168 222V248H0Z" fill="${GREEN}"/>
+  <circle cx="116" cy="152" r="26" fill="${GOLD2}"/>${rays(116,152,29,37,16)}
+  <rect x="78" y="34" width="12" height="214" fill="${BROWN}"/><rect x="18" y="24" width="132" height="14" rx="6" fill="${BROWN}"/>
+  <ellipse cx="32" cy="21" rx="7" ry="3.4" transform="rotate(-25 32 21)" fill="${GREEN}"/><ellipse cx="54" cy="20" rx="7" ry="3.4" transform="rotate(20 54 20)" fill="${GREEN}"/>
+  <ellipse cx="114" cy="20" rx="7" ry="3.4" transform="rotate(-20 114 20)" fill="${GREEN}"/><ellipse cx="136" cy="21" rx="7" ry="3.4" transform="rotate(25 136 21)" fill="${GREEN}"/>
+  <path d="M116 38V86" fill="none" stroke-width="2"/><path d="M116 84V108M106 94H126" fill="none" stroke-width="3"/>
+  <path d="M98 108H134L116 142Z" fill="${WHITE}"/>`,
+ /* 13 La Muerte */ () => `${rays(120,178,20,29,9,0,180,382.5)}<path d="M104 178A16 16 0 0 1 136 178Z" fill="${GOLD2}"/>
+  <rect x="92" y="142" width="10" height="36" fill="${GREY}"/><path d="M90 142L97 132L104 142Z" fill="${GREY}"/>
+  <rect x="138" y="142" width="10" height="36" fill="${GREY}"/><path d="M136 142L143 132L150 142Z" fill="${GREY}"/>
+  <path d="M0 178H168V248H0Z" fill="#6f8650"/>
+  <path d="M0 192Q42 184 84 194T168 190V204Q126 198 84 208T0 204Z" fill="${WATER}"/>
+  <rect x="24" y="18" width="5" height="230" fill="${BROWN}"/><circle cx="26.5" cy="15" r="4" fill="${GOLD}"/>
+  <path d="M29 26H126V98H29Z" fill="#1f1b18"/>${rose(78,62,20,WHITE)}
+  <g transform="translate(112 228) rotate(-24)">${crownSm}</g>`,
+ /* 14 La Templanza */ () => { const cup=`<path d="M-12-16H12Q12 4 2 7V12L7 16H-7L-2 12V7Q-12 4-12-16Z" fill="${GOLD}"/><ellipse cx="0" cy="-16" rx="12" ry="2.6" fill="${GOLD2}"/>`;
+  return `<path d="M96 204L124 170L146 192L168 178V214H96Z" fill="#c9d6dc"/>${rays(124,160,9,14,8)}<circle cx="124" cy="160" r="7" fill="${GOLD2}"/>
+  <path d="M0 202Q84 190 168 202V248H0Z" fill="${GREEN}"/>
+  <path d="M74 248C88 230 112 222 120 198L128 198C122 226 102 236 94 248Z" fill="${SAND}"/>
+  <ellipse cx="40" cy="228" rx="44" ry="14" fill="${WATER}"/>
+  <path d="M16 214V198M30 210V192" fill="none" stroke="${DGREEN}" stroke-width="2"/>
+  <ellipse cx="16" cy="194" rx="4" ry="6" fill="${GOLD2}" stroke-width="1"/><ellipse cx="30" cy="188" rx="4" ry="6" fill="${GOLD2}" stroke-width="1"/>
+  <rect x="70" y="20" width="28" height="28" fill="${WHITE}"/><path d="M84 25L94 43H74Z" fill="${GOLD}"/>
+  ${dbl('M62 88C98 70 122 108 116 142',WATER,4)}
+  <g transform="translate(52 96) rotate(28) scale(1.3)" stroke-width="1.15">${cup}</g>
+  <g transform="translate(116 158) rotate(-14) scale(1.3)" stroke-width="1.15">${cup}</g>`; },
+ /* 15 El Diablo */ () => { const ch=(sx,sy,ex,ey)=>{ let s=''; for(let i=0;i<8;i++){ const t=i/7, x=sx+(ex-sx)*t, y=sy+(ey-sy)*t+Math.sin(t*Math.PI)*14; s+=`<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="${i%2?2.4:4.6}" ry="${i%2?4.6:2.4}" fill="none" stroke-width="1.6"/>`; } return s; };
+  return `<g stroke="${LIGHT}">
+  <circle cx="84" cy="44" r="24" fill="none" stroke="${GOLD2}" stroke-width="1.4"/><path d="${pentD(84,44,21,90)}" fill="none" stroke="${GOLD2}" stroke-width="1.6"/>
+  <path d="M62 96C46 76 50 62 60 54C60 68 66 80 76 90Z" fill="#6e655b"/><path d="M106 96C122 76 118 62 108 54C108 68 102 80 92 90Z" fill="#6e655b"/>
+  <path d="M60 92Q84 82 108 92Q102 128 84 140Q66 128 60 92Z" fill="#4a3c33"/>
+  <path d="M68 104q6-4 11 1q-6 3-11-1zM100 104q-6-4-11 1q6 3 11-1z" fill="${ORANGE}"/><path d="M78 124q6 4 12 0" fill="none"/>
+  <rect x="48" y="150" width="72" height="10" fill="#3d3833"/><rect x="54" y="160" width="60" height="50" fill="#33302c"/>
+  <circle cx="84" cy="176" r="6" fill="none" stroke-width="2"/>${ch(80,182,26,236)}${ch(88,182,142,236)}
+  <g transform="rotate(-22 138 96)"><rect x="135" y="66" width="6" height="52" fill="${BROWN}"/><path transform="translate(138 126) scale(1 -1)" d="M0 6C-5 4-6-2 0-10C1-5 6-3 4 2C3 5 2 6 0 6Z" fill="${ORANGE}"/></g>
+  </g>`; },
+ /* 16 La Torre */ () => { let sp=''; [[30,92],[44,132],[24,162],[134,102],[148,142],[128,172],[36,204],[142,214],[56,112],[120,132]].forEach(([x,y],i)=>sp+=drop(x,y,1,i%2?GOLD2:ORANGE));
+  return `<path d="M14 248L40 210L60 216L84 198L108 214L130 204L156 248Z" fill="#7f786d"/>
+  <path d="M64 208L68 86H100L104 208Z" fill="${STEEL}"/><path d="M66 86V76H72V82H78V76H84V82H90V76H96V82H102V86Z" fill="${STEEL}"/>
+  <rect x="78" y="112" width="12" height="16" fill="#2b2420"/><rect x="72" y="148" width="10" height="14" fill="#2b2420"/><rect x="88" y="172" width="10" height="14" fill="#2b2420"/>
+  ${flame(80,108,1.2)}${flame(75,145,1)}${flame(94,169,1)}${flame(70,76,1.3)}${flame(84,70,1.6)}${flame(98,76,1.3)}
+  <path d="M6 6L46 32L38 36L82 70L54 44L62 40L22 6Z" fill="${GOLD2}"/>
+  <g transform="translate(118 56) rotate(30)">${crownSm}</g>${sp}`; },
+ /* 17 La Estrella */ () => { const sm=[[24,30],[144,30],[16,82],[152,82],[30,126],[138,126],[84,120]];
+  const jug=(x,y,rot)=>`<g transform="translate(${x} ${y}) rotate(${rot})"><path d="M-8-12Q-14 2-8 12H8Q14 2 8-12Z" fill="${ROSE}"/><path d="M-6-12V-17H6V-12" fill="${ROSE}"/><path d="M8-6q8 2 6 10" fill="none"/></g>`;
+  return `${sm.map(([x,y])=>`<path d="${starD(x,y,8,3.2,8)}" fill="${WHITE}"/>`).join('')}
+  <path d="${starD(84,58,32,13,8)}" fill="${GOLD2}"/>
+  <path d="M0 194Q50 186 104 192V248H0Z" fill="${WATER}"/><path d="M104 248V192Q134 182 168 188V248Z" fill="${GREEN}"/>
+  <path d="M18 214q10-4 20 0M50 226q10-4 20 0M24 238q10-4 20 0" fill="none" stroke-width="1"/>
+  ${dbl('M40 160C32 172 34 186 38 200','#d8e9f0',3)}${jug(54,150,-120)}
+  ${dbl('M123 160C132 172 134 184 132 194','#d8e9f0',3)}${jug(108,150,120)}`; },
+ /* 18 La Luna */ () => { const tower=x=>`<rect x="${x}" y="120" width="26" height="92" fill="#b8b2a6"/><path d="M${x-2} 120V112H${x+4}V116H${x+10}V112H${x+16}V116H${x+22}V112H${x+28}V120Z" fill="#b8b2a6"/><rect x="${x+9}" y="140" width="8" height="12" fill="#4d4740"/>`;
+  return `<path d="M0 172Q40 150 84 160T168 156V210H0Z" fill="#8aa08a"/>${tower(8)}${tower(134)}
+  <path d="M0 208Q84 192 168 208V248H0Z" fill="${GREEN}"/>
+  <path d="M66 248C62 226 94 216 88 198C83 184 94 172 87 156H81C88 172 76 184 80 198C86 216 54 226 58 248Z" fill="${SAND}"/>
+  <path d="M0 230Q84 216 168 230V248H0Z" fill="${WATER}"/>
+  ${rays(84,58,31,46,16)}${rays(84,58,31,39,16,11.25)}
+  <circle cx="84" cy="58" r="30" fill="${GOLD2}"/><path d="M84 30A28 28 0 0 0 84 86A18 28 0 0 1 84 30Z" fill="#dcb34c" stroke="none"/>
+  ${drop(38,104)}${drop(58,116)}${drop(110,112)}${drop(130,100)}${drop(84,106)}`; },
+ /* 19 El Sol */ () => { const xs=[24,62,106,146]; let st='', fh='';
+  xs.forEach((x,i)=>{ const y=168-(i%2)*6; st+=`<path d="M${x} ${y+6}V200" fill="none" stroke="${DGREEN}" stroke-width="2.4"/>`; fh+=`<path d="${starD(x,y,13,6.5,12)}" fill="${GOLD2}"/><circle cx="${x}" cy="${y}" r="5" fill="${BROWN}"/>`; });
+  let br=''; for(let r=0;r<3;r++){ const y=184+r*10; if(r) br+=`<path d="M0 ${y}H168" fill="none" stroke-width=".8"/>`; for(let x=(r%2?10:20);x<168;x+=20) br+=`<path d="M${x} ${y}V${y+10}" fill="none" stroke-width=".8"/>`; }
+  return `${triRays(84,78,38,66,8,GOLD2,0,7)}${triRays(84,78,38,54,8,GOLD,22.5,6)}
+  <circle cx="84" cy="78" r="36" fill="${GOLD2}"/>
+  <path d="M70 72q5-4 10 0M88 72q5-4 10 0" fill="none" stroke-width="1.8"/><path d="M84 76v10h-4" fill="none" stroke-width="1.4"/>
+  <path d="M72 94q12 9 24 0" fill="none" stroke-width="1.8"/>
+  <circle cx="69" cy="88" r="4" fill="${ROSE}" opacity=".5" stroke="none"/><circle cx="99" cy="88" r="4" fill="${ROSE}" opacity=".5" stroke="none"/>
+  ${st}<rect x="-2" y="184" width="172" height="30" fill="#cdb99c"/>${br}<path d="M-2 214H170V250H-2Z" fill="${GREEN}"/>${fh}`; },
+ /* 20 El Juicio */ () => `<path d="M0 248V196L30 174L52 194L84 168L118 196L140 178L168 198V248Z" fill="${WHITE}"/>
+  <path d="M0 214Q84 206 168 214V248H0Z" fill="${WATER}"/>
+  ${rays(84,52,40,150,7,0,30,150)}
+  <path d="M14 62a14 14 0 0 1 10-24a18 18 0 0 1 32-10a20 20 0 0 1 36 2a16 16 0 0 1 30 6a12 12 0 0 1 18 26z" fill="${WHITE}"/>
+  <path d="M52 72V98M78 94V98" fill="none" stroke-width="1"/>
+  <rect x="48" y="98" width="34" height="30" fill="${WHITE}"/><rect x="62" y="98" width="6" height="30" fill="${RUST}" stroke="none"/><rect x="48" y="110" width="34" height="6" fill="${RUST}" stroke="none"/><rect x="48" y="98" width="34" height="30" fill="none"/>
+  ${dbl('M44 64L106 118',GOLD,4)}
+  <path d="M102 114Q112 110 126 104Q124 120 118 132Q110 124 106 120Z" fill="${GOLD2}"/>`,
+ /* 21 El Mundo */ () => { let lv=''; for(let i=0;i<30;i++){ const t=i/30*2*Math.PI, x=84+46*Math.cos(t), y=126+74*Math.sin(t); const ang=Math.atan2(74*Math.cos(t),-46*Math.sin(t))*180/Math.PI; lv+=`<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="7" ry="3.2" transform="rotate(${f1(ang+25)} ${f1(x)} ${f1(y)})" fill="${i%2?GREEN:DGREEN}" stroke-width="1"/>`; }
+  return `${cloud(24,28,.8)}${cloud(144,28,.8)}${cloud(24,222,.8)}${cloud(144,222,.8)}
+  <ellipse cx="84" cy="126" rx="46" ry="74" fill="none" stroke="${K}" stroke-width="7"/><ellipse cx="84" cy="126" rx="46" ry="74" fill="none" stroke="${GREEN}" stroke-width="4.4"/>
+  ${lv}
+  <path d="M74 44L94 60M94 44L74 60M74 200L94 216M94 200L74 216" fill="none" stroke="${K}" stroke-width="6"/><path d="M74 44L94 60M94 44L74 60M74 200L94 216M94 200L74 216" fill="none" stroke="${RUST}" stroke-width="3.6"/>
+  <circle cx="84" cy="126" r="22" fill="${SKY}"/><ellipse cx="84" cy="126" rx="10" ry="22" fill="none" stroke-width="1"/>
+  <path d="M62 126H106M66 114H102M66 138H102" fill="none" stroke-width="1"/>`; }
+];
+
+/* ---------- Arcanos menores ---------- */
+const ROUND = {
+ 1:[[84,124]], 2:[[84,70],[84,178]], 3:[[84,52],[84,124],[84,196]],
+ 4:[[50,76],[118,76],[50,172],[118,172]], 5:[[50,70],[118,70],[84,124],[50,178],[118,178]],
+ 6:[[50,52],[118,52],[50,124],[118,124],[50,196],[118,196]],
+ 7:[[50,50],[118,50],[84,88],[50,126],[118,126],[50,202],[118,202]],
+ 8:[[50,42],[118,42],[50,96],[118,96],[50,152],[118,152],[50,206],[118,206]],
+ 9:[[46,42],[122,42],[46,96],[122,96],[84,124],[46,152],[122,152],[46,206],[122,206]],
+ 10:[[46,42],[122,42],[84,69],[46,96],[122,96],[46,152],[122,152],[84,179],[46,206],[122,206]]
+};
+const RSIZE = {1:96,2:64,3:54,4:58,5:52,6:48,7:44,8:42,9:40,10:38};
+function pipArt(card){
+  const s=card.arc, n=card.n;
+  if (n>10) return courtArt(card);
+  if (!SUITS[s].tall) return ROUND[n].map(([x,y])=>useSym(s,x,y,RSIZE[n])).join('');
+  if (n===1) return useSym(s,84,124,214);
+  if (n===2) return `<g transform="rotate(-24 84 124)">${useSym(s,84,124,206)}</g><g transform="rotate(24 84 124)">${useSym(s,84,124,206)}</g>`;
+  const rows={3:[3],4:[4],5:[3,2],6:[3,3],7:[4,3],8:[4,4],9:[5,4],10:[5,5]}[n];
+  let out='';
+  if (rows.length===1){ const c=rows[0], gap=c===3?44:36, h=c===3?196:170; for(let i=0;i<c;i++) out+=useSym(s,84+(i-(c-1)/2)*gap,124,h); }
+  else rows.forEach((c,r)=>{ const gap=c>=5?29:c===4?34:40, y=r?181:67; for(let i=0;i<c;i++) out+=useSym(s,84+(i-(c-1)/2)*gap,y,110); });
+  return out;
+}
+const HEADS = {
+ 11:(x,y)=>`<path d="M${x+8} ${y-8}C${x+26} ${y-44} ${x+48} ${y-38} ${x+42} ${y-18}C${x+36} ${y-28} ${x+26} ${y-24} ${x+14} ${y-4}Z" fill="${WHITE}"/><path d="M${x+12} ${y-8}C${x+24} ${y-28} ${x+34} ${y-32} ${x+40} ${y-26}" fill="none" stroke-width="1"/><path d="M${x-30} ${y+10}Q${x-34} ${y-14} ${x} ${y-16}Q${x+34} ${y-14} ${x+30} ${y+10}Z" fill="${RUST}"/><rect x="${x-31}" y="${y+6}" width="62" height="9" rx="4" fill="${GOLD}"/>`,
+ 12:(x,y)=>`<path d="M${x+4} ${y-20}C${x+30} ${y-42} ${x+54} ${y-20} ${x+46} ${y+14}C${x+40} ${y-6} ${x+28} ${y-14} ${x+14} ${y-12}Z" fill="${RUST}"/><path d="M${x-24} ${y+16}V${y-2}A24 24 0 0 1 ${x+24} ${y-2}V${y+16}Z" fill="${STEEL}"/><path d="M${x-24} ${y+2}H${x+24}M${x-18} ${y+8}H${x+18}" fill="none"/><path d="M${x} ${y-26}V${y+16}" fill="none" stroke-width="1"/><rect x="${x-27}" y="${y+14}" width="54" height="7" rx="3" fill="${GOLD}"/>`,
+ 13:(x,y)=>`<path d="M${x-28} ${y+8}L${x-24} ${y-14}L${x-12} ${y-2}L${x} ${y-24}L${x+12} ${y-2}L${x+24} ${y-14}L${x+28} ${y+8}Z" fill="${GOLD}"/><rect x="${x-30}" y="${y+6}" width="60" height="10" rx="3" fill="${GOLD2}"/><circle cx="${x-24}" cy="${y-16}" r="3.2" fill="${WHITE}"/><circle cx="${x}" cy="${y-26}" r="3.6" fill="${WHITE}"/><circle cx="${x+24}" cy="${y-16}" r="3.2" fill="${WHITE}"/><circle cx="${x}" cy="${y+11}" r="3" fill="${RUST}"/><circle cx="${x-16}" cy="${y+11}" r="2.2" fill="${TEAL}"/><circle cx="${x+16}" cy="${y+11}" r="2.2" fill="${TEAL}"/>`,
+ 14:(x,y)=>`${dbl(`M${x} ${y-10}V${y-36}M${x-6} ${y-28}H${x+6}`,GOLD,2.6)}<path d="M${x-32} ${y+8}L${x-34} ${y-16}L${x-20} ${y-4}L${x-12} ${y-22}L${x} ${y-8}L${x+12} ${y-22}L${x+20} ${y-4}L${x+34} ${y-16}L${x+32} ${y+8}Z" fill="${GOLD}"/><rect x="${x-34}" y="${y+6}" width="68" height="11" rx="3" fill="${GOLD2}"/><circle cx="${x-34}" cy="${y-17}" r="2.8" fill="${WHITE}"/><circle cx="${x-12}" cy="${y-23}" r="2.8" fill="${WHITE}"/><circle cx="${x+12}" cy="${y-23}" r="2.8" fill="${WHITE}"/><circle cx="${x+34}" cy="${y-17}" r="2.8" fill="${WHITE}"/><circle cx="${x}" cy="${y+11.5}" r="3.4" fill="${RUST}"/><circle cx="${x-18}" cy="${y+11.5}" r="2.4" fill="${TEAL}"/><circle cx="${x+18}" cy="${y+11.5}" r="2.4" fill="${TEAL}"/>`
+};
+function courtArt(card){
+  const s=card.arc, tall=SUITS[s].tall;
+  return `<path d="M26 250V122A58 58 0 0 1 142 122V250" fill="rgba(255,255,255,.38)" stroke-width="1"/>
+   <path d="M-2 226H170V250H-2Z" fill="rgba(42,31,23,.10)" stroke-width="1"/>
+   ${tall ? useSym(s,84,160,150) : useSym(s,84,160,100)}${HEADS[card.n](84, tall?52:68)}`;
+}
+
+/* ---------- Carta completa ---------- */
+const svgCache = {};
+function frontSVG(card){
+  if (svgCache[card.id]) return svgCache[card.id];
+  const isM = card.arc==='M';
+  const top = isM ? ROMAN[card.n] : card.n===1 ? 'AS' : card.n<=10 ? ROMAN[card.n] : '';
+  const bg = isM ? MAJ_BG[card.n] : SUITS[card.arc].bg;
+  const art = isM ? ART[card.n]() : pipArt(card);
+  const fs = f1(Math.min(28, 152/(card.name.length*0.34)));
+  const corner = (x,y)=>`<path d="${starD(x,y,4,1.4,4,-90)}" fill="${K}"/>`;
+  const topEl = top ? `<text x="100" y="34" text-anchor="middle" class="t-num">${top}</text>`
+                    : `<path d="${starD(100,28,6,2.2,4)}" fill="${K}"/><path d="M80 28H90M110 28H120" stroke="${K}" stroke-width=".8"/>`;
+  const svg = `<svg viewBox="0 0 200 340" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+   <rect x="7.5" y="7.5" width="185" height="325" rx="5" fill="none" stroke="${K}" stroke-width="1.5"/>
+   <rect x="11" y="11" width="178" height="318" rx="3" fill="none" stroke="${K}" stroke-width=".6"/>
+   ${corner(18,18)}${corner(182,18)}${corner(18,322)}${corner(182,322)}
+   ${topEl}
+   <g transform="translate(16 42)"><rect width="168" height="248" fill="url(#${bg})"/>
+     <g clip-path="url(#panelClip)" stroke="${K}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">${art}</g>
+     <rect width="168" height="248" fill="none" stroke="${K}" stroke-width="1.4"/></g>
+   <text x="100" y="319" text-anchor="middle" class="t-name" font-size="${fs}">${card.name}</text>
+  </svg>`;
+  return (svgCache[card.id] = svg);
+}
+
+/* ---------- Dorso (simétrico: no delata si la carta está invertida) ---------- */
+function backSVG(){
+  const G='#d6b25e';
+  let stars=''; [[50,62],[150,62],[50,278],[150,278],[100,40],[100,300],[38,170],[162,170]].forEach(([x,y])=>stars+=`<path d='${starD(x,y,6,1.8,4)}' fill='${G}'/>`);
+  const cres = `<path d='M78 98A24 24 0 0 1 122 98A26 15 0 0 0 78 98Z' fill='${G}'/>`;
+  return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 340'><defs>
+  <pattern id='p' width='20' height='20' patternUnits='userSpaceOnUse'><path d='M10 0L20 10L10 20L0 10Z' fill='none' stroke='${G}' stroke-width='.6' opacity='.5'/><circle cx='10' cy='10' r='1.1' fill='${G}' opacity='.65'/></pattern>
+  <radialGradient id='v' cx='.5' cy='.5' r='.75'><stop offset='0' stop-color='#2c3768'/><stop offset='1' stop-color='#131935'/></radialGradient></defs>
+  <rect width='200' height='340' fill='url(#v)'/><rect x='14' y='14' width='172' height='312' fill='url(#p)'/>
+  <rect x='8' y='8' width='184' height='324' rx='6' fill='none' stroke='${G}' stroke-width='2'/>
+  <rect x='13' y='13' width='174' height='314' rx='3' fill='none' stroke='${G}' stroke-width='.8'/>
+  <circle cx='100' cy='170' r='47' fill='#1a2147' stroke='${G}' stroke-width='1.6'/><circle cx='100' cy='170' r='41' fill='none' stroke='${G}' stroke-width='.6'/>
+  <path d='${starD(100,170,35,13,8)}' fill='${G}' opacity='.9'/><circle cx='100' cy='170' r='8' fill='#1a2147' stroke='${G}' stroke-width='1.2'/>
+  ${cres}<g transform='rotate(180 100 170)'>${cres}</g>${stars}
+  <circle cx='22' cy='22' r='3' fill='${G}'/><circle cx='178' cy='22' r='3' fill='${G}'/><circle cx='22' cy='318' r='3' fill='${G}'/><circle cx='178' cy='318' r='3' fill='${G}'/>
+  </svg>`;
+}
+
+/* ===== Significados extendidos =====
+   [tema al derecho, tema invertida, significado al derecho, significado invertida, amor al derecho, amor invertida, consejo al derecho, consejo invertida]
+   Los "temas" son frases sin artículo para poder usarlas dentro de oraciones ("una etapa de ...", "gira en torno a ..."). */
+const TXT = {
+/* ---------- Arcanos Mayores ---------- */
+m0:['nuevos comienzos, libertad y confianza en lo desconocido','impulsos sin medir, miedo a dar el salto y dispersión',
+ 'El Loco es el primer paso del viaje: alguien que camina liviano, con lo justo, mirando al cielo y sin miedo al borde del precipicio. Habla de un comienzo que no necesita tener todo resuelto para arrancar. Te invita a confiar en tu intuición, a probar algo nuevo y a dejar que la vida te sorprenda. Es una energía joven, curiosa y espontánea: lo importante no es saber exactamente adónde vas a llegar, sino animarte a empezar.',
+ 'Invertido, El Loco pierde el equilibrio entre libertad y cuidado. Puede mostrar decisiones apuradas, riesgos innecesarios o ganas de escapar sin mirar las consecuencias. Pero también puede señalar lo contrario: un salto que querés dar y no te animás, por miedo al qué dirán o a equivocarte. La pregunta clave es si estás actuando desde la curiosidad o desde la evasión.',
+ 'Algo nuevo y fresco: una relación que empieza, o una forma más libre y liviana de vivir el vínculo. Dejate sorprender sin querer controlarlo todo.',
+ 'Inestabilidad o compromiso a medias. Puede haber miedo a entregarse, o alguien que no quiere ataduras.',
+ 'Animate a dar el primer paso aunque no tengas todas las respuestas.',
+ 'Antes de saltar, mirá dónde vas a caer; y si el miedo te paraliza, empezá por algo chico.'],
+m1:['iniciativa, talento y poder para concretar','talento desaprovechado, falta de foco y engaños',
+ 'El Mago tiene sobre la mesa los cuatro elementos: todo lo que necesita para crear. Es la carta de la voluntad puesta en acción, de transformar una idea en algo real. Indica que tenés las habilidades, los recursos y la energía para lograr lo que te proponés; lo que falta es decidirte y hacerlo. Es un momento ideal para empezar proyectos, comunicar, negociar o mostrar lo que sabés hacer.',
+ 'Invertido, El Mago habla de un potencial que no se está usando bien. Puede haber dispersión, dudas sobre tu propia capacidad o proyectos que se quedan en la idea. También advierte sobre manipulación: alguien que promete mucho y cumple poco, o que usa su encanto para conseguir algo. Revisá qué es real y qué es humo, en vos y en quienes te rodean.',
+ 'Atracción, seducción y capacidad de generar el vínculo que querés. Buen momento para tomar la iniciativa.',
+ 'Ojo con las palabras lindas sin hechos detrás, o con juegos de seducción que no llevan a nada.',
+ 'Usá lo que ya tenés: tu talento alcanza para empezar hoy.',
+ 'Enfocá tu energía en una sola cosa y desconfiá de lo que suena demasiado bien.'],
+m2:['intuición, silencio y saber interior','intuición ignorada, secretos y desconexión con vos',
+ 'La Sacerdotisa custodia lo que todavía no se ve. Sentada entre dos columnas, representa el conocimiento que no viene de los libros sino de adentro: la intuición, los sueños, las corazonadas. Esta carta pide pausa y escucha. No es momento de forzar respuestas ni de actuar por impulso: algo se está gestando en silencio y se va a revelar a su tiempo. Confiá en lo que sentís aunque no puedas explicarlo.',
+ 'Invertida, sugiere que estás desoyendo tu voz interior, tapándola con ruido, opiniones ajenas o apuro. También puede hablar de secretos, información oculta o cosas que no se están diciendo. Es una invitación a reconectar con vos: meditar, escribir, estar a solas un rato. La respuesta que buscás probablemente ya la sabés; solo falta animarte a escucharla.',
+ 'Un vínculo con mucha conexión intuitiva, o sentimientos que todavía no se dijeron. Hay más de lo que se ve a simple vista.',
+ 'Algo se está ocultando, o alguien no muestra lo que siente. Prestá atención a lo que no se dice.',
+ 'Hacé silencio, escuchate y esperá antes de decidir.',
+ 'Dejá de buscar respuestas afuera: tu intuición ya te está hablando.'],
+m3:['abundancia, creatividad y cuidado','bloqueo creativo, descuido personal y dar de más',
+ 'La Emperatriz es la fertilidad en todos sus sentidos: crear, nutrir, disfrutar, hacer crecer. Rodeada de naturaleza, simboliza la abundancia que llega cuando cuidamos lo que sembramos. Puede anunciar proyectos que prosperan, creatividad desbordante, placer, belleza y conexión con el cuerpo. También habla de maternidad, literal o simbólica: cuidar a otros y, sobre todo, cuidarte a vos.',
+ 'Invertida, la abundancia se traba. Puede haber bloqueo creativo, cansancio o una sensación de vacío. Muchas veces señala que estás dando mucho a los demás y quedándote sin nada para vos, o que el cuidado se volvió dependencia. Es momento de volver a tu cuerpo, a lo que te da placer y a lo que te nutre de verdad.',
+ 'Amor cálido, sensual y generoso. Un vínculo que florece, con mucha ternura y disfrute compartido.',
+ 'Desequilibrio entre lo que das y lo que recibís, o un cuidado que se vuelve control.',
+ 'Nutrí lo que querés que crezca, empezando por vos.',
+ 'Antes de seguir dando, recargá tu propia energía.'],
+m4:['orden, estructura y liderazgo','rigidez, control excesivo o falta de estructura',
+ 'El Emperador gobierna desde un trono de piedra: es la carta del orden, los límites y la autoridad. Habla de ponerle estructura a lo que querés lograr, de planificar, de tomar decisiones firmes y hacerte cargo. Puede representar a una figura de autoridad (un jefe, un padre) o tu propia capacidad de liderar. Es un momento para construir bases sólidas y actuar con disciplina y responsabilidad.',
+ 'Invertido, el poder se desequilibra. Puede aparecer autoritarismo, terquedad o necesidad de controlarlo todo, ya sea tuya o de alguien cercano. O al revés: falta de organización, de límites o de compromiso, y las cosas se desordenan. Preguntate si estás siendo demasiado rígido con vos o con otros, o si te está faltando sostener lo que empezás.',
+ 'Estabilidad, compromiso y un vínculo con bases firmes. Una presencia protectora y confiable.',
+ 'Control, celos o una relación donde uno manda y el otro obedece. Hace falta más igualdad.',
+ 'Ordená, planificá y ponete al frente con firmeza.',
+ 'Soltá un poco el control, o empezá a poner los límites que te faltan.'],
+m5:['tradición, aprendizaje y guía','ruptura de moldes, rebeldía y reglas que ya no sirven',
+ 'El Sumo Sacerdote es el maestro, el guía espiritual, quien transmite un saber. Representa las tradiciones, las instituciones, los valores compartidos y los caminos ya probados. Puede indicar un aprendizaje formal, un mentor que aparece, un compromiso serio (como un casamiento o un contrato) o la necesidad de pedir consejo a alguien con más experiencia. Es una carta de pertenencia y de sabiduría heredada.',
+ 'Invertido, cuestiona lo establecido. Las reglas de siempre, las expectativas familiares o los mandatos sociales ya no encajan con quien sos hoy. Puede ser un momento de rebeldía sana, de buscar tu propio camino espiritual o de romper con algo que te limitaba. También advierte sobre el dogmatismo: aferrarse a una sola verdad sin escuchar otras.',
+ 'Compromiso, valores compartidos y una relación formal o tradicional. Puede hablar de casamiento.',
+ 'Un vínculo que no encaja en lo esperado, o diferencias de valores que conviene hablar.',
+ 'Buscá a alguien que sepa más y dejate guiar.',
+ 'Escuchá tu propia verdad aunque no coincida con lo que se espera de vos.'],
+m6:['amor, elección y valores alineados','desarmonía, indecisión y valores en conflicto',
+ 'Los Enamorados hablan de unión, pero sobre todo de elección. Esta carta aparece cuando hay una decisión importante que tiene que salir del corazón y estar alineada con tus valores. En lo afectivo, anuncia un vínculo profundo, atracción genuina y armonía. En lo general, te pide elegir con honestidad, sabiendo que cada elección también implica dejar algo atrás.',
+ 'Invertida, muestra desarmonía: en una pareja, entre lo que pensás y lo que sentís, o entre lo que querés y lo que hacés. Puede haber indecisión, tentaciones, triángulos o elecciones tomadas por presión. Es momento de preguntarte qué valorás de verdad y de dejar de postergar una decisión que en el fondo ya sabés que tenés que tomar.',
+ 'Una de las mejores cartas para el amor: conexión profunda, atracción mutua y un vínculo elegido de corazón.',
+ 'Desencuentros, dudas o una tercera persona en el medio. El vínculo necesita sinceridad.',
+ 'Elegí lo que está alineado con tus valores, aunque cueste.',
+ 'Dejá de postergar la decisión y hablá con sinceridad sobre lo que sentís.'],
+m7:['avance, determinación y victoria','falta de rumbo, obstáculos y frustración',
+ 'El Carro es la carta del movimiento y la conquista. Su conductor guía dos fuerzas opuestas hacia una misma dirección: eso es justamente lo que te pide. Anuncia avances, logros que se consiguen con esfuerzo, viajes o cambios en los que tomás el control. La clave está en la voluntad y el foco: si sabés adónde vas y no te dispersás, es muy difícil que algo te detenga.',
+ 'Invertido, el carro se desvía. Puede haber frustración, falta de dirección o la sensación de tirar para dos lados a la vez. También puede indicar que estás forzando algo que no avanza, o que perdiste el control de una situación. Es momento de frenar, revisar el rumbo y volver a alinear lo que querés con lo que hacés.',
+ 'Una relación que avanza, la decisión de ir por lo que sentís, o un vínculo que supera obstáculos en equipo.',
+ 'Cada uno tira para su lado o hay luchas de poder. Falta un rumbo común.',
+ 'Definí tu meta y avanzá con decisión, sin distraerte.',
+ 'Frená, elegí una sola dirección y recién ahí volvé a arrancar.'],
+m8:['coraje, paciencia y fuerza interior','inseguridad, impulsividad y agotamiento',
+ 'La Fuerza muestra a alguien que doma a un león con suavidad, no con violencia. Es la fuerza interior: el coraje sereno, la paciencia, la compasión, el dominio de tus propios impulsos. Esta carta te recuerda que podés con lo que estás atravesando, y que tu poder está en la calma y en la confianza, no en imponerte. Es momento de sostener y de perseverar con amor.',
+ 'Invertida, la confianza se resiente. Puede haber inseguridad, dudas sobre tu capacidad o la sensación de estar sin energía. También puede indicar reacciones impulsivas, enojo que se escapa o miedo que domina. La invitación es volver a tu centro, tratarte con más ternura y recordar todo lo que ya superaste.',
+ 'Un amor paciente, que contiene y acompaña. La ternura puede más que cualquier conflicto.',
+ 'Inseguridades, celos o reacciones impulsivas que lastiman el vínculo.',
+ 'Actuá con calma y paciencia: tu fuerza está en la suavidad.',
+ 'Antes de reaccionar, respirá y recordá todo lo que ya superaste.'],
+m9:['introspección, búsqueda interior y sabiduría','aislamiento, encierro y desconexión',
+ 'El Ermitaño se retira a la montaña con su farol para buscar la verdad. Es una carta de introspección, de tomar distancia del ruido y mirar hacia adentro. Indica un tiempo para estar a solas, reflexionar, estudiar o buscar sentido. No es una soledad triste sino elegida: un retiro necesario para encontrar tus propias respuestas. También puede anunciar la aparición de un maestro o guía.',
+ 'Invertido, el retiro se vuelve aislamiento. Puede que te estés encerrando demasiado, evitando a los demás por miedo o tristeza, o que sientas que perdiste la luz que te guiaba. También puede señalar lo contrario: miedo a estar a solas con vos. Hace falta encontrar un equilibrio entre la búsqueda interior y el contacto con otros.',
+ 'Un tiempo de soledad elegida, o una relación que necesita espacio para que cada uno se encuentre.',
+ 'Distancia emocional, frialdad o aislamiento dentro del vínculo.',
+ 'Tomate un tiempo a solas para escuchar tu propia voz.',
+ 'No te encierres: compartí lo que te pasa con alguien de confianza.'],
+m10:['cambios, ciclos y golpes de suerte','mala racha, resistencia al cambio y patrones repetidos',
+ 'La Rueda gira y nada permanece igual. Esta carta anuncia un cambio de ciclo, giros inesperados del destino y, en general, buena suerte. Lo que estaba quieto empieza a moverse, aparecen oportunidades y se abren puertas. Te recuerda que la vida tiene ciclos: después de un momento bajo viene uno alto. Aprovechá el impulso y fluí con el cambio en lugar de resistirlo.',
+ 'Invertida, la rueda parece girar en contra: retrasos, una mala racha o la sensación de que las cosas no dependen de vos. También puede mostrar patrones que se repiten una y otra vez hasta que se aprende la lección. Lo que no podés controlar, soltalo; lo que sí podés cambiar, cambialo. Ningún ciclo dura para siempre.',
+ 'Un giro en el amor: alguien que aparece de golpe, un reencuentro o un cambio que renueva el vínculo.',
+ 'Una relación que repite los mismos problemas, o altibajos que desgastan.',
+ 'Fluí con el cambio y aprovechá la oportunidad cuando aparezca.',
+ 'Rompé el patrón: hacé algo distinto para obtener un resultado distinto.'],
+m11:['verdad, equilibrio y decisiones justas','injusticia, deshonestidad y responsabilidades evitadas',
+ 'La Justicia sostiene una balanza y una espada: equilibrio y claridad. Es la carta de la causa y el efecto, de recibir lo que corresponde según lo que se hizo. Puede hablar de asuntos legales, contratos, decisiones importantes o momentos en que la verdad sale a la luz. Te pide actuar con honestidad, evaluar con objetividad y hacerte cargo de tus elecciones.',
+ 'Invertida, algo está desbalanceado. Puede haber una situación injusta, falta de honestidad (propia o ajena) o resultados que no se corresponden con el esfuerzo. También puede indicar que estás evitando hacerte cargo de algo, o que es más cómodo culpar a otros. La invitación es mirar con sinceridad cuál es tu parte y actuar en consecuencia.',
+ 'Un vínculo equilibrado, honesto y recíproco. Decisiones tomadas con la cabeza y el corazón.',
+ 'Desequilibrio en la pareja, deshonestidad o reproches sin resolver.',
+ 'Actuá con honestidad y evaluá todo con objetividad.',
+ 'Hacete cargo de tu parte y pedí lo que es justo para vos.'],
+m12:['pausa, entrega y nuevas perspectivas','estancamiento, resistencia y esperas que ya no sirven',
+ 'En la imagen clásica, El Colgado está suspendido cabeza abajo pero con el rostro sereno: eligió esa posición. Es la carta de la pausa voluntaria, de ver las cosas desde otro ángulo, de soltar el control. Indica que no es momento de forzar ni de apurarse: a veces hay que detenerse para entender. Puede pedir una renuncia que, aunque cueste, te va a dar una comprensión nueva.',
+ 'Invertido, la pausa se vuelve estancamiento. Puede que estés esperando algo que no llega, postergando decisiones o sacrificándote sin sentido. También puede mostrar resistencia a soltar o a cambiar de punto de vista. Es momento de preguntarte si esperar todavía te sirve o si ya es hora de moverte.',
+ 'Un tiempo de espera en el amor, o la necesidad de mirar la relación desde otro lugar.',
+ 'Un vínculo estancado, o sacrificios que no son correspondidos.',
+ 'No fuerces nada: pausá y mirá la situación desde otro ángulo.',
+ 'Dejá de esperar: si algo no avanza, es momento de soltarlo o de actuar.'],
+m13:['finales, transformación profunda y renacer','miedo a soltar, resistencia al cambio y estancamiento',
+ 'La Muerte casi nunca habla de muerte física: es la carta de la transformación. Algo termina para que algo nuevo pueda nacer. Puede ser una relación, un trabajo, una etapa o una forma de ser. Aunque los finales duelen, esta carta los presenta como necesarios y liberadores, como el otoño que deja caer las hojas para que llegue la primavera. Lo que se va deja espacio.',
+ 'Invertida, muestra resistencia a un final inevitable. Te estás aferrando a algo que ya cumplió su ciclo, por miedo a lo desconocido o por costumbre. Ese aferrarse genera estancamiento y desgaste. La carta te invita a aceptar el cierre: soltar no es perder, es abrirle la puerta a lo que viene.',
+ 'Un cierre: el fin de una relación o de una forma de vivirla, para que nazca algo más verdadero.',
+ 'Aferrarse a un vínculo que ya terminó, o miedo a transformar la relación.',
+ 'Aceptá que algo termina y dejá espacio para lo nuevo.',
+ 'Soltá lo que ya cumplió su ciclo: quedarte ahí te desgasta.'],
+m14:['equilibrio, paciencia y armonía','excesos, desequilibrio e impaciencia',
+ 'La Templanza trasvasa agua de una copa a otra con una calma infinita. Es la carta del equilibrio, la moderación y la paciencia. Indica que las cosas se van a resolver si encontrás el punto medio y las tomás con calma. Habla de sanar, de integrar opuestos, de combinar lo mejor de dos mundos y de avanzar paso a paso. Es una energía serena que trae armonía y bienestar.',
+ 'Invertida, el equilibrio se rompe. Puede haber excesos (de trabajo, de comida, de emociones), apuro o conflictos por posturas extremas. También puede indicar que estás poniendo demasiada energía en un área y descuidando otras. La invitación es volver a tu ritmo y recuperar la medida.',
+ 'Una relación armoniosa, donde ambos ceden y se complementan. Paz y entendimiento.',
+ 'Desbalance en la pareja, discusiones por posturas extremas o falta de paciencia.',
+ 'Buscá el punto medio y tomá las cosas con calma.',
+ 'Revisá en qué te estás excediendo y recuperá tu equilibrio.'],
+m15:['apegos, tentaciones y ataduras','liberación, cortar ataduras y recuperar el control',
+ 'En la imagen clásica, El Diablo muestra figuras encadenadas, pero las cadenas están flojas: podrían quitárselas. Es la carta de los apegos, las tentaciones y las ataduras. Señala algo que te domina: un hábito, un deseo, un miedo, una dependencia emocional o material. También puede hablar de pasión intensa y de deseo. Reconocer qué te ata es el primer paso para liberarte.',
+ 'Invertido, es una carta de liberación. Estás tomando conciencia de lo que te limitaba y empezando a soltarlo: un vínculo tóxico, un hábito, una creencia. Puede costar, pero el proceso ya empezó. También puede pedirte que mires con honestidad algún aspecto tuyo que preferís no ver.',
+ 'Pasión intensa y atracción fuerte, pero también posibles celos, obsesión o dependencia.',
+ 'Liberarse de una relación que ataba, o sanar una dinámica de dependencia.',
+ 'Mirá con honestidad qué te ata y preguntate si querés seguir así.',
+ 'Seguí soltando: estás recuperando tu libertad.'],
+m16:['cambios repentinos, revelaciones y derrumbes necesarios','cambios postergados, miedo al derrumbe y crisis evitadas',
+ 'La Torre es alcanzada por un rayo y se derrumba: es la carta del cambio súbito. Algo que parecía firme se cae de golpe, o una verdad sale a la luz y lo sacude todo. Aunque asusta, La Torre destruye solo lo que no tenía bases sólidas: estructuras falsas, ilusiones, situaciones insostenibles. Después del derrumbe queda el terreno libre para construir algo más auténtico.',
+ 'Invertida, el cambio se está postergando. Sabés que algo no da más, pero evitás enfrentarlo por miedo a que todo se caiga. Esa resistencia puede alargar la crisis. También puede indicar que el derrumbe ya pasó y estás en plena reconstrucción. Mejor acompañar el cambio que esperar a que te pase por encima.',
+ 'Una crisis o revelación que sacude la relación. Puede ser un final abrupto o una verdad que cambia todo.',
+ 'Tensiones que se vienen acumulando y que tarde o temprano van a salir.',
+ 'No te aferres a lo que se cae: dejá que se derrumbe lo que no era firme.',
+ 'Enfrentá ahora el cambio que venís postergando.'],
+m17:['esperanza, sanación e inspiración','desánimo, falta de fe y desconexión',
+ 'Después de La Torre llega La Estrella: la calma después de la tormenta. Es una de las cartas más luminosas del mazo. Habla de esperanza, sanación, fe en el futuro e inspiración. Indica que estás en un proceso de recuperación y que las cosas van a mejorar. Te invita a confiar, a soñar en grande y a conectar con lo que le da sentido a tu vida. Es un buen augurio para casi cualquier pregunta.',
+ 'Invertida, la luz se apaga un poco. Puede haber desánimo, desconfianza en el futuro o la sensación de que nada va a cambiar. También puede mostrar desconexión con tus sueños o con tu lado espiritual. La estrella sigue ahí, solo que la estás perdiendo de vista: volvé a lo que te inspira y date tiempo para sanar.',
+ 'Un amor que sana, esperanza renovada y conexión del alma. Un vínculo inspirador.',
+ 'Desilusión o expectativas muy altas. Hace falta recuperar la fe en el amor.',
+ 'Confiá en que lo mejor está por venir y seguí tu inspiración.',
+ 'Volvé a conectar con lo que te ilusiona, aunque sea de a poco.'],
+m18:['ilusiones, miedos e intuición','verdades que salen a la luz, claridad y miedos que se disuelven',
+ 'La Luna ilumina de noche un camino entre dos torres, donde todo se ve distorsionado. Es la carta de la confusión, la ilusión y los miedos inconscientes. Indica que no todo es lo que parece: puede haber engaños, inseguridades o una situación poco clara. Pero también es la carta de la intuición y de los sueños. Avanzá despacio, prestá atención a tus sensaciones y no tomes decisiones definitivas hasta ver mejor.',
+ 'Invertida, la niebla empieza a disiparse. Las cosas se aclaran, los engaños salen a la luz y los miedos pierden fuerza. Puede ser el momento en que entendés algo que antes no veías. También puede indicar que estás enfrentando tus fantasmas y liberándote de ansiedades que te acompañaban hace tiempo.',
+ 'Dudas, inseguridad o cosas poco claras en el vínculo. Cuidado con idealizar o con los engaños.',
+ 'Se aclara la verdad sobre una relación; se disipan miedos o malentendidos.',
+ 'No decidas en la confusión: esperá a ver las cosas con claridad.',
+ 'Ahora que ves mejor, animate a actuar según lo que descubriste.'],
+m19:['alegría, éxito y claridad','alegría nublada, cansancio y expectativas muy altas',
+ 'El Sol es una de las cartas más positivas del tarot. Todo se ilumina: éxito, alegría, vitalidad, claridad y optimismo. Anuncia logros, reconocimiento, buena energía y momentos felices. Es la energía de un chico que juega bajo el sol, sin miedos ni dobleces. Lo que estabas buscando se vuelve claro y posible. Si aparece en tu tirada, tomalo como un gran sí de la vida.',
+ 'Invertido, el sol sigue ahí pero algo lo tapa. Puede haber cansancio, falta de entusiasmo o expectativas tan altas que te impiden disfrutar. También puede indicar que la alegría se demora un poco o que un exceso de optimismo no te deja ver algún detalle. Aun así, sigue siendo una carta favorable.',
+ 'Felicidad compartida, un vínculo luminoso y sincero. Excelente momento para el amor.',
+ 'La relación es buena, pero falta tiempo o energía para disfrutarla.',
+ 'Mostrate como sos y disfrutá: este es tu momento.',
+ 'Bajá un poco las expectativas y disfrutá lo que ya está bien.'],
+m20:['renacer, despertar y segundas oportunidades','autocrítica dura, dudas y llamados ignorados',
+ 'En la imagen clásica, un ángel toca la trompeta y despierta a todos: El Juicio es la carta del llamado interior y del renacer. Indica un momento de balance, de mirar hacia atrás para entender y tomar una decisión importante. Puede anunciar segundas oportunidades, reencuentros o un cambio de vida motivado por una toma de conciencia. Es hora de responder a lo que tu alma te pide.',
+ 'Invertido, el llamado no se escucha o da miedo responderlo. Puede haber autocrítica excesiva, culpa por el pasado o dudas que te impiden avanzar. También puede mostrar que estás evitando una decisión importante. La invitación es perdonarte, aprender de lo vivido y animarte a dar el paso.',
+ 'Un reencuentro, una segunda oportunidad o un vínculo que se renueva desde otro lugar.',
+ 'Reproches del pasado que no se sueltan, o miedo a darle otra oportunidad al amor.',
+ 'Escuchá ese llamado interior y animate a renacer.',
+ 'Perdonate lo que pasó y date permiso para empezar de nuevo.'],
+m21:['logros, plenitud y ciclos que se completan','asuntos sin terminar, falta de cierre y atajos',
+ 'El Mundo es la última carta de los Arcanos Mayores: el viaje se completa. Habla de logros, realización, plenitud y satisfacción. Un ciclo importante se cierra con éxito y te sentís en armonía con vos y con el mundo. Puede anunciar viajes, reconocimiento o la culminación de un proyecto. Es momento de celebrar lo logrado antes de empezar una nueva etapa.',
+ 'Invertido, falta algo para cerrar. Puede haber un proyecto que no terminás, una etapa que no termina de concluir o la sensación de haberte quedado a mitad de camino. También puede indicar que buscás atajos en lugar de completar el proceso. Identificá qué falta y dale el cierre que merece.',
+ 'Un vínculo pleno y maduro, o una relación que llega a una nueva etapa (convivencia, compromiso).',
+ 'Algo pendiente en la relación que impide pasar a la siguiente etapa.',
+ 'Celebrá lo que lograste y cerrá el ciclo con gratitud.',
+ 'Terminá lo que empezaste antes de lanzarte a lo próximo.'],
+
+/* ---------- Bastos (fuego: acción, pasión, proyectos) ---------- */
+w1:['inspiración, nuevos proyectos y entusiasmo','demoras, desgano e ideas que no despegan',
+ 'El As de Bastos es una chispa: en la imagen clásica, una mano sale de una nube sosteniendo una vara que florece. Anuncia el nacimiento de algo nuevo y lleno de energía: un proyecto, una idea, una pasión, un emprendimiento. Es el impulso inicial, el entusiasmo puro, las ganas de crear. Aprovechá este momento para arrancar: la energía está de tu lado.',
+ 'Invertido, la chispa no termina de prender. Puede haber demoras, falta de motivación o ideas que no encuentran cómo concretarse. A veces es miedo a empezar; otras, falta de un plan. Revisá qué te frena y buscá un primer paso pequeño para volver a encender el fuego.',
+ 'Pasión, atracción fuerte o el comienzo de una relación con mucha química.',
+ 'La chispa se apagó un poco, o hay deseo sin concreción.',
+ 'Aprovechá el impulso y empezá ya, aunque sea con algo chico.',
+ 'Buscá qué te motiva de verdad antes de forzar el arranque.'],
+w2:['planificación, visión y decisiones a futuro','miedo a lo desconocido, indecisión y falta de plan',
+ 'En la imagen clásica, una figura mira el horizonte con un globo terráqueo en la mano: el Dos de Bastos habla de planificar tu próximo paso. Ya diste el primer impulso y ahora toca decidir hacia dónde expandirte. Es una carta de visión, de pensar a largo plazo, de evaluar opciones y animarte a salir de tu zona de confort. El mundo está ahí, esperando que elijas un camino.',
+ 'Invertido, el miedo a lo desconocido te mantiene en lo conocido. Puede haber indecisión, falta de planificación o la sensación de no saber hacia dónde ir. Quizás estás esperando la garantía de que todo va a salir bien antes de moverte. Esa garantía no existe: animate a mirar más lejos.',
+ 'Pensar el futuro de la relación: decidir si avanzar o explorar otras opciones.',
+ 'Dudas sobre el rumbo del vínculo o miedo a comprometerse.',
+ 'Planificá tu próximo paso y elegí un rumbo.',
+ 'Dejá de esperar certezas: elegí una dirección y probá.'],
+w3:['expansión, progreso y oportunidades','demoras, obstáculos y planes que no avanzan',
+ 'En el Tres de Bastos los barcos ya zarparon y solo queda esperar su regreso: lo que sembraste empieza a dar frutos. Es una carta de expansión, crecimiento y nuevas oportunidades, muchas veces vinculadas con viajes, el exterior o ampliar horizontes. Tu visión se está concretando: seguí pensando en grande y preparate para recibir.',
+ 'Invertido, las cosas tardan más de lo esperado. Puede haber obstáculos, retrasos o resultados que no llegan. También puede indicar falta de visión o de preparación. No es un no definitivo: es un pedido de paciencia y de ajustar el plan.',
+ 'Una relación que crece y mira hacia adelante. Puede hablar de vínculos a distancia.',
+ 'Expectativas que no se cumplen o una relación que no termina de avanzar.',
+ 'Seguí pensando en grande: lo que sembraste está creciendo.',
+ 'Tené paciencia y revisá qué ajustar en tu plan.'],
+w4:['celebración, hogar y armonía','tensiones en casa, falta de apoyo y transiciones',
+ 'El Cuatro de Bastos es una fiesta: guirnaldas, gente celebrando, un hogar en armonía. Anuncia momentos de alegría compartida, logros que se festejan, reuniones familiares, casamientos o mudanzas felices. Es una carta de estabilidad y de pertenencia: sentirte en casa, con tu gente, después de haber trabajado para llegar hasta acá.',
+ 'Invertido, la armonía se resiente. Puede haber tensiones familiares, falta de apoyo o la sensación de no pertenecer. También puede indicar una transición, como una mudanza o un cambio en tu grupo. La alegría sigue siendo posible, pero requiere reconectar con los tuyos.',
+ 'Celebración en pareja, compromiso, convivencia o una etapa muy feliz.',
+ 'Tensiones en la convivencia o dudas sobre formalizar.',
+ 'Celebrá tus logros con la gente que querés.',
+ 'Dedicale tiempo a sanar los vínculos cercanos.'],
+w5:['competencia, roces y desacuerdos','conflictos evitados, acuerdos y tensión interna',
+ 'En la imagen clásica, cinco personas agitan sus bastos sin ningún orden: el Cinco de Bastos muestra conflicto, competencia y caos. Puede hablar de discusiones, egos que chocan, rivalidad laboral o demasiadas opiniones sobre lo mismo. Aunque es incómodo, este tipo de fricción también puede ser un motor: te obliga a definir tu postura y a crecer.',
+ 'Invertido, el conflicto empieza a calmarse y aparecen acuerdos. Pero también puede indicar que estás evitando una discusión necesaria, tragándote lo que pensás para no generar problemas. Esa tensión no desaparece: se acumula adentro. Decí lo que tengas que decir, con respeto.',
+ 'Discusiones, diferencias de opinión o competencia dentro del vínculo.',
+ 'Una tregua, o conflictos que se esconden debajo de la alfombra.',
+ 'No te lo tomes personal: usá el desafío para crecer.',
+ 'Hablá lo que venís callando antes de que explote.'],
+w6:['victoria, reconocimiento y confianza','falta de reconocimiento, ego y dudas sobre el propio valor',
+ 'En la imagen clásica, una figura a caballo desfila con una corona de laureles: el Seis de Bastos es el triunfo a la vista de todos. Llega el reconocimiento por tu esfuerzo, buenas noticias, éxito y confianza. Los demás ven lo que lograste. Es un momento para disfrutar, mostrarte y sentir orgullo por tu camino.',
+ 'Invertido, el reconocimiento no llega o se demora. Puede haber sensación de que no te valoran, o dudas sobre tu propio mérito. También puede advertir sobre el ego: buscar aprobación externa o subestimar a otros. Volvé a lo esencial: el valor de lo que hacés no depende de los aplausos.',
+ 'Una relación que te llena de orgullo, o conquistar a quien te interesa.',
+ 'Inseguridad en el vínculo o necesidad de demostrar algo todo el tiempo.',
+ 'Disfrutá tu logro y dejá que te reconozcan.',
+ 'Valorá tu esfuerzo aunque nadie más lo aplauda.'],
+w7:['defensa, perseverancia y firmeza','agotamiento, ganas de rendirse y sentir todo en contra',
+ 'En la imagen clásica, desde lo alto de una colina, una figura defiende su lugar contra seis bastos que la atacan desde abajo. El Siete de Bastos habla de sostener lo tuyo frente a la competencia, las críticas o la presión. Tenés la ventaja del terreno: si te mantenés firme, podés ganar. Es una carta de coraje y convicción.',
+ 'Invertido, el cansancio se nota. Puede haber ganas de rendirte, sensación de que todo está en tu contra o de estar a la defensiva todo el tiempo. Elegí bien qué batallas valen la pena: no todo requiere que te defiendas.',
+ 'Defender la relación frente a terceros o mantenerte firme en lo que necesitás.',
+ 'Cansancio de pelear por el vínculo o una actitud demasiado defensiva.',
+ 'Sostené tu postura con convicción.',
+ 'Elegí qué peleas valen tu energía y soltá las demás.'],
+w8:['rapidez, movimiento y noticias','demoras, frustración y apuro',
+ 'Ocho bastos vuelan por el aire en la misma dirección: todo se acelera. Esta carta anuncia noticias, mensajes, viajes y avances rápidos. Lo que estaba estancado se mueve de golpe y las cosas suceden más rápido de lo esperado. Es un buen momento para actuar, comunicar y subirte a la ola.',
+ 'Invertido, la velocidad se frena o se descontrola. Puede haber retrasos, mensajes que no llegan, planes que se traban o, al revés, decisiones apuradas. Bajá un cambio, revisá antes de enviar y tené paciencia con los tiempos.',
+ 'Novedades en el amor, mensajes, encuentros rápidos o una relación que avanza a toda velocidad.',
+ 'Malentendidos, mensajes que no llegan o un apuro que no deja madurar el vínculo.',
+ 'Actuá rápido: es momento de moverte.',
+ 'Tené paciencia con los tiempos y no te apures a decidir.'],
+w9:['resiliencia, perseverancia y último esfuerzo','cansancio, desconfianza y ganas de abandonar',
+ 'En la imagen clásica, una figura herida pero de pie custodia su lugar: el Nueve de Bastos habla de resistencia. Ya pasaste por mucho y seguís ahí. Estás cerca de la meta, aunque te sientas sin fuerzas. Esta carta te pide un último esfuerzo y te recuerda tu enorme capacidad de recuperación.',
+ 'Invertido, el cansancio te pone a la defensiva. Puede haber agotamiento, desconfianza hacia todo el mundo o ganas de abandonar justo antes de llegar. No tenés que cargar con todo: pedí ayuda, descansá y volvé con más energía.',
+ 'Un vínculo que pasó pruebas y sigue en pie, aunque con cicatrices.',
+ 'Desconfianza por heridas pasadas o miedo a volver a abrirte.',
+ 'Aguantá un poco más: estás más cerca de lo que creés.',
+ 'Pedí ayuda: no tenés que cargar con todo.'],
+w10:['cargas, responsabilidades y esfuerzo','soltar cargas, delegar y liberarse',
+ 'En la imagen clásica, una figura camina encorvada cargando diez bastos que no la dejan ver el camino. El Diez de Bastos habla de sobrecarga: demasiadas responsabilidades, estrés, esfuerzo excesivo. Puede que te estés haciendo cargo de cosas que no te corresponden, o que un proyecto que salió bien se haya vuelto una carga.',
+ 'Invertido, empezás a soltar. Reconocés que no podés con todo y aprendés a delegar, a decir que no o a dejar lo que no es tuyo. También puede advertir que, si no soltás, el peso te va a terminar desbordando.',
+ 'Sentir que cargás con todo el peso de la relación.',
+ 'Liberarse de una carga emocional o repartir mejor las responsabilidades.',
+ 'Revisá qué de todo lo que cargás es realmente tuyo.',
+ 'Delegá sin culpa y quedate solo con lo que te corresponde.'],
+w11:['entusiasmo, curiosidad e ideas nuevas','impaciencia, poca constancia e ideas sin rumbo',
+ 'La Sota de Bastos es un espíritu joven y curioso que mira su vara con entusiasmo. Representa las ganas de explorar, aprender y empezar algo nuevo. Puede anunciar noticias estimulantes, una propuesta creativa o una persona joven y llena de energía. Es una invitación a jugar y a experimentar.',
+ 'Invertida, el entusiasmo no se sostiene: muchas ideas, poca constancia. Puede haber impaciencia, proyectos que se abandonan rápido o falta de dirección. Elegí una idea y dale tiempo para crecer.',
+ 'Coqueteo, mensajes divertidos o el comienzo de algo con mucha energía.',
+ 'Inmadurez, o un interés que se enciende y se apaga rápido.',
+ 'Explorá con curiosidad, sin miedo a equivocarte.',
+ 'Elegí una sola idea y sostenela en el tiempo.'],
+w12:['acción, aventura y pasión','impulsividad, apuro y falta de dirección',
+ 'El Caballero de Bastos avanza a toda velocidad en un caballo encabritado: es pura acción. Representa energía, valentía, aventura, viajes y ganas de ir por lo que querés. Puede indicar un cambio rápido, una mudanza o una persona apasionada e intrépida. Es momento de moverte.',
+ 'Invertido, la energía se vuelve impulsiva. Puede haber apuro, decisiones sin pensar, enojo o proyectos que se dejan a mitad de camino. Canalizá esa fuerza hacia algo concreto.',
+ 'Pasión, aventura y alguien que llega con mucha intensidad.',
+ 'Una intensidad que dura poco, o alguien que no se compromete.',
+ 'Animate a la aventura y movete con decisión.',
+ 'Pensá antes de lanzarte y terminá lo que empezás.'],
+w13:['confianza, carisma y calidez','inseguridad, celos y desgaste',
+ 'La Reina de Bastos se sienta con un girasol en la mano y un gato negro a sus pies: es seguridad, magnetismo y calidez. Representa a alguien que brilla con luz propia, que inspira y lidera con alegría. Puede hablar de vos en tu mejor versión: con confianza, creatividad, independencia y generosidad.',
+ 'Invertida, la luz se apaga. Puede haber inseguridad, celos, necesidad de aprobación o desgaste por estar pendiente de todo el mundo. Volvé a vos y a lo que te hace brillar.',
+ 'Atracción, seguridad personal y un vínculo cálido y apasionado.',
+ 'Celos, inseguridad o necesidad de controlar.',
+ 'Confiá en tu brillo y mostrate.',
+ 'Dejá de compararte y volvé a lo que te hace bien.'],
+w14:['liderazgo, visión y emprendimiento','autoritarismo, impulsividad y exigencia excesiva',
+ 'El Rey de Bastos es el líder visionario: tiene ideas grandes y la energía para concretarlas. Representa emprendimiento, inspiración, liderazgo y valentía. Puede hablar de una persona carismática que guía a otros, o de tu propia capacidad para tomar las riendas y hacer crecer un proyecto.',
+ 'Invertido, el liderazgo se vuelve autoritario o impulsivo. Puede haber exigencia excesiva, intolerancia o decisiones apresuradas. Cuidado con querer controlarlo todo o con esperar demasiado de los demás.',
+ 'Una relación con pasión y admiración mutua; una presencia protectora y decidida.',
+ 'Alguien dominante, impaciente o que quiere imponer su forma.',
+ 'Tomá las riendas con visión y valentía.',
+ 'Liderá escuchando, sin imponer.'],
+
+/* ---------- Copas (agua: emociones, vínculos) ---------- */
+c1:['amor nuevo, apertura emocional y compasión','emociones guardadas, vacío y amor propio pendiente',
+ 'En la imagen clásica, una copa desborda agua desde una mano que sale de las nubes: el As de Copas es el corazón que se abre. Anuncia amor nuevo, emociones intensas, sensibilidad, compasión y creatividad. Puede ser el comienzo de una relación, una amistad profunda o una reconexión con tus propios sentimientos. Dejá que fluya.',
+ 'Invertido, el corazón se cierra. Puede haber emociones reprimidas, vacío, tristeza o dificultad para recibir amor. Muchas veces señala que primero hay que volver a quererse. Date permiso para sentir.',
+ 'Un amor que empieza, sentimientos sinceros y mucha ternura.',
+ 'Miedo a abrirse o sentimientos no correspondidos.',
+ 'Abrí tu corazón y dejá fluir lo que sentís.',
+ 'Empezá por darte a vos el amor que buscás.'],
+c2:['unión, conexión y reciprocidad','desequilibrio, distancia y falta de conexión',
+ 'En la imagen clásica, dos personas intercambian copas bajo un símbolo de unión: el Dos de Copas es conexión mutua. Habla de pareja, atracción, amistad sincera, alianzas y acuerdos. Es una carta de reciprocidad: dar y recibir en igual medida, sentir que la otra persona te ve. Muy favorable para vínculos de todo tipo.',
+ 'Invertido, el vínculo está desparejo. Puede haber distancia, malentendidos, peleas o falta de comunicación. Alguien da más que el otro, o algo se rompió. Hablen de lo que no se está diciendo.',
+ 'Conexión mutua, atracción y una relación que se fortalece. Excelente carta para el amor.',
+ 'Desencuentros, distancia emocional o una ruptura.',
+ 'Apostá por el vínculo y cuidá la reciprocidad.',
+ 'Hablá con sinceridad para recuperar la conexión.'],
+c3:['amistad, celebración y comunidad','excesos, chismes y aislamiento',
+ 'En la imagen clásica, tres figuras levantan sus copas y bailan: el Tres de Copas es alegría compartida. Habla de amistad, festejos, reuniones, comunidad y apoyo mutuo. Puede anunciar una celebración, un reencuentro con amigos o un momento de mucha conexión con tu grupo.',
+ 'Invertido, la fiesta se complica. Puede haber chismes, excesos, terceros que se meten o sensación de quedar afuera. También puede pedirte que elijas mejor con quién compartís tu tiempo.',
+ 'Diversión, salidas y vínculos alegres; a veces, un amor que surge entre amigos.',
+ 'Terceros que interfieren o chismes que afectan la relación.',
+ 'Apoyate en tus amistades y celebrá con ellas.',
+ 'Elegí bien con quién compartís y cuidate de los excesos.'],
+c4:['apatía, desgano y oportunidades que no se ven','despertar, ganas nuevas y apertura',
+ 'En la imagen clásica, una figura sentada bajo un árbol mira tres copas con desinterés, sin notar la cuarta que le ofrecen. El Cuatro de Copas habla de apatía, aburrimiento o insatisfacción. La atención puesta en lo que no te llena no te deja ver lo que se te ofrece. Es un llamado a mirar alrededor con otros ojos.',
+ 'Invertido, despertás. Vuelven las ganas, te abrís a nuevas propuestas y empezás a ver oportunidades que antes ignorabas. Es momento de decir que sí a lo que llega.',
+ 'Desinterés o rutina en la relación; no valorar lo que se tiene.',
+ 'Renovación del interés y apertura a algo nuevo.',
+ 'Mirá alrededor: hay más oportunidades de las que creés.',
+ 'Aprovechá las ganas nuevas y decí que sí.'],
+c5:['pérdida, tristeza y decepción','aceptación, perdón y ganas de seguir adelante',
+ 'En la imagen clásica, una figura con capa negra mira tres copas derramadas, sin ver las dos que siguen en pie detrás. El Cinco de Copas habla de pérdida, duelo, decepción y arrepentimiento. Algo dolió y está bien sentirlo. Pero la carta también te recuerda que no todo está perdido: todavía hay cosas valiosas esperándote cuando puedas darte vuelta.',
+ 'Invertido, empezás a aceptar lo que pasó. El duelo se transforma, aparece el perdón y volvés a mirar lo que sí tenés. Es un momento de sanación y de seguir adelante.',
+ 'Tristeza por una relación, desilusión o una ruptura que duele.',
+ 'Superar una pérdida amorosa y abrirse otra vez.',
+ 'Permitite el duelo, pero no te olvides de lo que todavía tenés.',
+ 'Seguí adelante: lo que viene puede ser mejor.'],
+c6:['nostalgia, recuerdos e inocencia','vivir en el pasado, idealización y necesidad de soltar',
+ 'En la imagen clásica, dos chicos comparten copas con flores en un patio: el Seis de Copas es nostalgia y ternura. Habla de recuerdos lindos, la infancia, el regreso de alguien del pasado o la vuelta a lo simple. Es una carta de inocencia, generosidad y conexión con tus raíces.',
+ 'Invertido, el pasado pesa. Puede que estés idealizando lo que fue o que te cueste avanzar porque te quedaste en otra etapa. Llevate lo bueno de esos recuerdos y seguí.',
+ 'Un reencuentro, un amor del pasado o mucha ternura y complicidad.',
+ 'Idealizar una relación pasada o repetir patrones de antes.',
+ 'Conectá con tu lado más simple y genuino.',
+ 'Soltá el pasado para poder vivir el presente.'],
+c7:['opciones, ilusiones y fantasías','claridad, decisiones y vuelta a la realidad',
+ 'Siete copas flotan en las nubes, cada una con algo distinto: el Siete de Copas habla de muchas opciones y de ilusiones. Hay sueños, fantasías, deseos y posibilidades, pero no todas son reales. La carta te pide discernir qué es concreto y qué es un espejismo.',
+ 'Invertido, la niebla se despeja. Se aclara qué es real y qué es fantasía, y podés tomar una decisión con los pies en la tierra. Es momento de elegir y comprometerte.',
+ 'Fantasías, idealización o dudas entre varias opciones.',
+ 'Claridad sobre lo que realmente querés en el amor.',
+ 'Bajá a tierra tus sueños y elegí uno concreto.',
+ 'Ya sabés lo que querés: decidite.'],
+c8:['partidas, búsqueda de sentido y dejar atrás','miedo a irse, costumbre y regresos',
+ 'En la imagen clásica, una figura se aleja de noche dejando ocho copas apiladas: el Ocho de Copas habla de irse en busca de algo más. Algo que antes te llenaba ya no lo hace y, aunque duela, sabés que tenés que partir. Es una carta de búsqueda, de madurez emocional y de animarse a dejar lo conocido.',
+ 'Invertido, el miedo te frena. Te quedás por costumbre, por comodidad o por miedo a la soledad. También puede indicar un regreso a algo que habías dejado. Preguntate si de verdad querés estar ahí.',
+ 'Alejarse de una relación que ya no llena, o necesidad de buscar algo más profundo.',
+ 'Quedarse en un vínculo por miedo, o volver con alguien del pasado.',
+ 'Animate a irte de lo que ya no te llena.',
+ 'Preguntate si te quedás por amor o por miedo.'],
+c9:['deseos cumplidos, satisfacción y gratitud','insatisfacción, excesos y deseos superficiales',
+ 'En la imagen clásica, una figura satisfecha posa delante de nueve copas: el Nueve de Copas es la carta de los deseos. Anuncia que lo que pediste puede cumplirse. Habla de satisfacción, placer, abundancia emocional y bienestar. Es un momento para disfrutar y agradecer.',
+ 'Invertido, conseguiste lo que querías pero algo falta. Puede haber insatisfacción, excesos o deseos más superficiales de lo que pensabas. Revisá qué necesitás de verdad para sentirte en plenitud.',
+ 'Felicidad en el amor y deseos que se cumplen.',
+ 'Expectativas que no se cumplen o placer sin profundidad.',
+ 'Pedí tu deseo y disfrutá lo que llega con gratitud.',
+ 'Buscá lo que te llena de verdad, no solo lo que brilla.'],
+c10:['familia, felicidad y plenitud emocional','tensiones familiares, expectativas y desconexión',
+ 'En la imagen clásica, una familia celebra bajo un arcoíris de diez copas: el Diez de Copas es la plenitud emocional. Habla de felicidad compartida, armonía en el hogar, vínculos sanos y amor duradero. Es la imagen de sentirte en paz con tu gente.',
+ 'Invertido, la armonía se resiente. Puede haber tensiones familiares, desconexión o la presión de cumplir con una idea de familia perfecta. La felicidad real no necesita ser perfecta.',
+ 'Amor duradero, proyectos en común y felicidad compartida.',
+ 'Expectativas distintas sobre el futuro o tensiones en la convivencia.',
+ 'Cuidá y disfrutá los vínculos que te hacen bien.',
+ 'Soltá la idea de perfección y buscá una armonía real.'],
+c11:['sensibilidad, creatividad e intuición','inmadurez emocional, bloqueo creativo e inseguridad',
+ 'En la imagen clásica, la Sota de Copas mira sorprendida un pez que asoma de su copa: es la carta de las sorpresas emocionales. Habla de sensibilidad, imaginación, mensajes afectivos e intuiciones. Puede anunciar una noticia linda, una propuesta creativa o una persona dulce y soñadora.',
+ 'Invertida, las emociones se desbordan o se traban. Puede haber inmadurez emocional, inseguridad o bloqueo creativo. Date espacio para entender lo que sentís antes de actuar.',
+ 'Una declaración, un mensaje tierno o un amor que empieza con dulzura.',
+ 'Inmadurez emocional o ilusiones poco realistas.',
+ 'Abrite a sentir y a dejarte sorprender.',
+ 'Escuchá tus emociones sin dejar que te desborden.'],
+c12:['romance, propuestas y encanto','promesas vacías, celos y cambios de humor',
+ 'El Caballero de Copas avanza despacio ofreciendo su copa: es el romántico del tarot. Habla de propuestas, invitaciones, encanto, idealismo y gestos de amor. Puede anunciar a alguien que llega con intenciones románticas o una oferta que te entusiasma.',
+ 'Invertido, el encanto esconde poco compromiso. Puede haber promesas vacías, cambios de humor, celos o una idealización excesiva. Mirá los hechos, no solo las palabras.',
+ 'Una propuesta romántica; alguien detallista y con intenciones de amor.',
+ 'Mucho romance en palabras y poco en hechos.',
+ 'Seguí al corazón, con los ojos abiertos.',
+ 'Desconfiá de lo que parece demasiado lindo para ser verdad.'],
+c13:['empatía, intuición y contención','dependencia emocional, cargar lo ajeno e inseguridad',
+ 'La Reina de Copas contempla una copa ornamentada a orillas del mar: es la sensibilidad profunda. Representa empatía, intuición, compasión y capacidad de contener a otros. Puede hablar de vos en tu versión más amorosa y emocionalmente sabia, o de una persona que te cuida.',
+ 'Invertida, la sensibilidad se vuelve carga. Puede haber dependencia emocional, absorción de los problemas ajenos o inseguridad. Poné límites con amor y cuidate a vos también.',
+ 'Un amor profundo, comprensivo y lleno de ternura.',
+ 'Dependencia emocional o dar demasiado sin recibir.',
+ 'Confiá en tu intuición y cuidá con amor, sin olvidarte de vos.',
+ 'Poné límites: no todo lo que sienten los demás es tuyo.'],
+c14:['madurez emocional, calma y diplomacia','manipulación emocional, frialdad y desborde',
+ 'El Rey de Copas se mantiene sereno sobre un trono que flota en un mar agitado: es el dominio emocional. Representa madurez, calma, diplomacia y sabiduría para acompañar a otros. Puede hablar de una persona contenedora o de tu propia capacidad para manejar las emociones sin reprimirlas.',
+ 'Invertido, el equilibrio emocional se pierde. Puede haber frialdad, manipulación o emociones reprimidas que terminan desbordándose. Expresá lo que sentís de forma sana.',
+ 'Un vínculo maduro, estable y con mucha contención.',
+ 'Frialdad, manipulación o emociones no expresadas.',
+ 'Mantené la calma y respondé desde la madurez.',
+ 'No reprimas lo que sentís: expresalo con calma.'],
+};
+
+Object.assign(TXT, {
+/* ---------- Espadas (aire: mente, verdad, decisiones) ---------- */
+s1:['claridad, verdad e ideas nuevas','confusión, malentendidos e ideas trabadas',
+ 'En la imagen clásica, una espada coronada surge de las nubes: el As de Espadas es la claridad mental. Anuncia ideas nuevas, verdades que se revelan, decisiones firmes y comunicación directa. Es el momento de cortar con la confusión y ver las cosas como son, aunque no sean como te gustaría.',
+ 'Invertido, la mente se nubla. Puede haber confusión, malentendidos, información incompleta o palabras que lastiman. No tomes decisiones importantes hasta ver con claridad.',
+ 'Sinceridad, conversaciones claras y decisiones firmes en el vínculo.',
+ 'Malentendidos o palabras duras que hieren.',
+ 'Decí la verdad y decidí con la cabeza fría.',
+ 'Esperá a tener toda la información antes de decidir.'],
+s2:['indecisión, bloqueo y decisiones evitadas','información que aparece, decisión y salida del bloqueo',
+ 'En la imagen clásica, una figura con los ojos vendados sostiene dos espadas cruzadas frente al mar: el Dos de Espadas es la indecisión. Hay una elección que estás evitando, quizás porque las dos opciones parecen igual de difíciles. La carta te pide sacarte la venda y mirar la situación de frente.',
+ 'Invertido, el bloqueo empieza a ceder. Aparece información nueva que te permite decidir, o la presión hace que ya no puedas postergar más. También puede indicar confusión por exceso de opciones.',
+ 'Dudas, evitar una conversación importante o un vínculo en pausa.',
+ 'Se destraba una decisión pendiente en el amor.',
+ 'Sacate la venda: elegir también es avanzar.',
+ 'Usá lo que ahora sabés para decidir.'],
+s3:['dolor, desamor y verdades que duelen','sanación, perdón y superación del dolor',
+ 'Tres espadas atraviesan un corazón bajo la lluvia: el Tres de Espadas es el dolor emocional. Habla de desamor, decepción, tristeza o una verdad que lastima. Aunque es una carta dura, también es honesta: ver el dolor es el primer paso para sanarlo.',
+ 'Invertido, la herida empieza a cerrar. Hay sanación, perdón y ganas de dejar atrás lo que dolió. También puede indicar un dolor que se está reprimiendo y necesita expresarse.',
+ 'Ruptura, decepción o tristeza en el vínculo.',
+ 'Sanar una herida amorosa y volver a confiar.',
+ 'Permitite sentir el dolor para poder soltarlo.',
+ 'Seguí sanando: lo peor ya pasó.'],
+s4:['descanso, recuperación y pausa','agotamiento, inquietud y vuelta a la acción',
+ 'En la imagen clásica, una figura descansa en una iglesia con las manos juntas: el Cuatro de Espadas pide reposo. Después de un período intenso, tu cuerpo y tu mente necesitan recuperarse. Es momento de parar, meditar, dormir bien y recargar energía antes de seguir.',
+ 'Invertido, te cuesta descansar o ya es hora de volver a la acción. Puede haber agotamiento por no haber parado a tiempo, o inquietud por retomar. Escuchá a tu cuerpo.',
+ 'Una pausa en la relación o la necesidad de espacio.',
+ 'Retomar el contacto después de un tiempo de distancia.',
+ 'Pará y descansá: es parte del camino.',
+ 'Volvé a la acción de a poco, sin forzarte.'],
+s5:['conflictos, egos y victorias amargas','reconciliación, arrepentimiento y fin de las peleas',
+ 'En la imagen clásica, una figura recoge espadas mientras otras dos se alejan derrotadas: el Cinco de Espadas habla de conflictos donde nadie gana del todo. Puede haber peleas, competencia desleal, egos o ganar a cualquier precio. La pregunta es si vale la pena tener razón a costa de todo lo demás.',
+ 'Invertido, llega el momento de hacer las paces. Puede haber arrepentimiento, ganas de reconciliarse o de soltar una discusión vieja. También puede indicar que te estás alejando de un conflicto que no te suma.',
+ 'Discusiones, orgullo o peleas por tener razón.',
+ 'Reconciliación después de un conflicto.',
+ 'Preguntate si ganar esta pelea vale lo que cuesta.',
+ 'Hacé las paces y soltá el orgullo.'],
+s6:['transición, alivio y nuevos rumbos','resistencia a irse, asuntos pendientes y estancamiento',
+ 'En la imagen clásica, un bote cruza de aguas agitadas a aguas tranquilas: el Seis de Espadas es la transición. Te estás alejando de una etapa difícil hacia algo mejor. Puede indicar una mudanza, un viaje o un cambio de etapa. Lo peor ya pasó.',
+ 'Invertido, querés avanzar pero algo te retiene: asuntos pendientes, miedo o vínculos que no soltás. Resolvé lo que quedó abierto para poder seguir.',
+ 'Dejar atrás una etapa difícil del vínculo o alejarse de algo que hizo daño.',
+ 'No poder soltar una relación o temas sin resolver.',
+ 'Seguí avanzando: lo que viene es más tranquilo.',
+ 'Cerrá lo pendiente para poder moverte.'],
+s7:['estrategia, secretos y engaños','confesiones, verdades que salen y culpa',
+ 'En la imagen clásica, una figura se escapa a escondidas con cinco espadas: el Siete de Espadas habla de astucia, estrategia y, a veces, engaño. Alguien puede no estar siendo honesto, o puede que te toque actuar con discreción para conseguir lo que querés. Ojo con lo que se dice y se hace a escondidas.',
+ 'Invertido, las cosas salen a la luz. Puede haber confesiones, culpa o la necesidad de decir la verdad. Es mejor ser honesto antes de que todo se descubra solo.',
+ 'Secretos, desconfianza o alguien que no muestra todas sus cartas.',
+ 'Una verdad que sale a la luz en la relación.',
+ 'Actuá con estrategia, pero sin traicionar tus valores.',
+ 'Decí la verdad: es el camino más liviano.'],
+s8:['sentirse sin salida, miedos y limitaciones','liberación, nuevas perspectivas y recuperar el poder',
+ 'En la imagen clásica, una figura vendada y atada está rodeada de espadas, pero el camino está abierto: el Ocho de Espadas habla de sentirte sin salida. Muchas de las limitaciones que ves son mentales: miedos, creencias o pensamientos que te paralizan. Hay más opciones de las que creés.',
+ 'Invertido, empezás a liberarte. Ves la salida, cuestionás tus miedos y recuperás tu poder. Es un momento de alivio y de animarte a moverte.',
+ 'Sentirse sin salida en un vínculo o paralizado por miedos.',
+ 'Liberarse de una situación que limitaba.',
+ 'Cuestioná tus miedos: la salida está más cerca de lo que parece.',
+ 'Seguí avanzando hacia tu libertad.'],
+s9:['ansiedad, preocupación e insomnio','alivio, pedir ayuda y miedos que pierden fuerza',
+ 'En la imagen clásica, una figura se despierta en plena noche cubriéndose la cara, con nueve espadas en la pared: el Nueve de Espadas es la ansiedad. Preocupaciones que no te dejan dormir, miedos que se agrandan en la cabeza, culpa. La carta te recuerda que muchas veces lo que tememos es peor en nuestra mente que en la realidad.',
+ 'Invertido, la angustia empieza a ceder. Hablar con alguien, pedir ayuda o mirar las cosas a la luz del día te alivia. Los miedos pierden fuerza.',
+ 'Angustia por una relación, inseguridades o miedo a perder.',
+ 'Alivio y claridad después de un período de angustia.',
+ 'Hablalo con alguien: lo que te preocupa pesa menos compartido.',
+ 'Seguí cuidándote: estás saliendo de la angustia.'],
+s10:['finales dolorosos, tocar fondo y cierres','recuperación, resurgir y alivio',
+ 'En la imagen clásica, una figura yace con diez espadas clavadas, pero en el horizonte amanece: el Diez de Espadas es tocar fondo. Algo terminó de manera definitiva y dolorosa: una traición, un final, una crisis. Pero es el final, no el comienzo: desde acá solo se puede subir.',
+ 'Invertido, lo peor ya pasó. Empezás a levantarte, a sanar y a reconstruir. También puede indicar resistencia a aceptar un final que ya ocurrió.',
+ 'Un final definitivo o una decepción profunda.',
+ 'Recuperarse de una ruptura y empezar de nuevo.',
+ 'Aceptá el final: el amanecer ya está llegando.',
+ 'Levantate de a poco: estás resurgiendo.'],
+s11:['curiosidad, ideas nuevas y atención alerta','chismes, palabras hirientes y dispersión',
+ 'La Sota de Espadas sostiene su espada en alto mientras mira a su alrededor: es la mente alerta. Representa curiosidad, ganas de aprender, ideas nuevas y comunicación. Puede anunciar noticias, aprendizajes o una persona inquieta y observadora.',
+ 'Invertida, la mente se dispersa o se afila de más. Puede haber chismes, palabras que hieren, desconfianza o hablar sin pensar. Medí lo que decís.',
+ 'Conversaciones, curiosidad o alguien que observa antes de acercarse.',
+ 'Chismes, sarcasmo o desconfianza.',
+ 'Mantenete atento y aprendé todo lo que puedas.',
+ 'Cuidá tus palabras y no te metas en chismes.'],
+s12:['determinación, rapidez y franqueza','impulsividad, agresividad y apuro',
+ 'El Caballero de Espadas carga a toda velocidad con la espada en alto: es pura determinación mental. Representa ambición, rapidez, franqueza y ganas de llegar al objetivo. Ideal para actuar con decisión, aunque sin llevarte puesto a nadie.',
+ 'Invertido, la velocidad se vuelve imprudencia. Puede haber agresividad, impaciencia, palabras duras o decisiones apuradas. Pensá antes de actuar.',
+ 'Alguien directo, intenso y decidido; una relación que avanza rápido.',
+ 'Discusiones, frialdad o falta de tacto.',
+ 'Avanzá con decisión hacia lo que querés.',
+ 'Frená un poco y medí tus palabras.'],
+s13:['independencia, claridad y honestidad','frialdad, crítica dura y amargura',
+ 'La Reina de Espadas mira al frente con la espada erguida: es la claridad y la independencia. Representa a alguien que ve las cosas como son, dice la verdad y pone límites claros. Su sabiduría muchas veces viene de haber atravesado experiencias difíciles.',
+ 'Invertida, la claridad se vuelve dureza. Puede haber frialdad, crítica excesiva, amargura o rencor. Un poco de suavidad no te quita fuerza.',
+ 'Independencia y honestidad; saber lo que se quiere y lo que no.',
+ 'Frialdad, distancia o heridas que endurecieron el corazón.',
+ 'Decí tu verdad con claridad y poné límites.',
+ 'Soltá la amargura: la dureza también te aísla.'],
+s14:['autoridad, lógica y ética','abuso de poder, manipulación y frialdad',
+ 'El Rey de Espadas se sienta con la espada en alto, sereno y firme: es la autoridad intelectual. Representa lógica, verdad, justicia y decisiones con la cabeza fría. Puede hablar de un profesional, un asesor o tu propia capacidad para pensar con objetividad.',
+ 'Invertido, la razón se usa para dominar. Puede haber manipulación, abuso de poder, frialdad o crueldad. Cuidado con usar la inteligencia para lastimar, o con dejarte manipular.',
+ 'Una relación basada en el respeto y la honestidad; alguien racional.',
+ 'Frialdad, control o falta de empatía.',
+ 'Decidí con lógica y ética.',
+ 'No uses la razón para lastimar ni te dejes manipular.'],
+
+/* ---------- Oros (tierra: trabajo, dinero, cuerpo) ---------- */
+p1:['oportunidades concretas, prosperidad y comienzos sólidos','oportunidades perdidas, falta de planificación y gastos',
+ 'En la imagen clásica, una mano ofrece una moneda dorada sobre un jardín florecido: el As de Oros es una oportunidad concreta. Puede ser un trabajo nuevo, dinero, un proyecto con bases sólidas o una inversión. Es una semilla de prosperidad: si la cuidás, crece.',
+ 'Invertido, la oportunidad se escapa o no se aprovecha. Puede haber falta de planificación, gastos imprevistos o dudas que hacen perder el momento. Cuidá tus recursos.',
+ 'Un vínculo estable que empieza con bases firmes.',
+ 'Inseguridad o temas materiales que afectan la relación.',
+ 'Aprovechá la oportunidad y sembrá a largo plazo.',
+ 'Planificá mejor y cuidá lo que tenés.'],
+p2:['equilibrio, adaptación y malabares','desorden, sobrecarga y deudas',
+ 'En la imagen clásica, una figura hace malabares con dos monedas mientras, detrás, los barcos navegan entre olas: el Dos de Oros habla de equilibrar muchas cosas a la vez. Trabajo, dinero, tiempo, responsabilidades. Con flexibilidad y buen humor podés sostenerlo todo.',
+ 'Invertido, los malabares se descontrolan: demasiadas cosas a la vez, desorden, deudas o falta de prioridades. Algo se te puede caer si no te organizás.',
+ 'Equilibrar la relación con el resto de la vida.',
+ 'Falta de tiempo o de energía para el vínculo.',
+ 'Ordená prioridades y fluí con flexibilidad.',
+ 'Soltá algo: no podés con todo a la vez.'],
+p3:['trabajo en equipo, aprendizaje y calidad','falta de colaboración, trabajo a medias y desorganización',
+ 'En la imagen clásica, un artesano trabaja en una catedral mientras otros revisan los planos: el Tres de Oros es la colaboración. Habla de trabajo en equipo, aprendizaje, oficio y reconocimiento por la calidad de lo que hacés. Juntos se construye mejor.',
+ 'Invertido, el equipo no funciona. Puede haber falta de coordinación, de compromiso o de comunicación, o trabajo hecho a las apuradas. Revisá roles y expectativas.',
+ 'Construir juntos, trabajar en equipo dentro de la pareja.',
+ 'Falta de compromiso o de esfuerzo compartido.',
+ 'Sumá a otros y cuidá la calidad de lo que hacés.',
+ 'Aclará roles y comprometete con el equipo.'],
+p4:['seguridad, ahorro y control','miedo a perder, gastos sin control o necesidad de soltar',
+ 'En la imagen clásica, una figura abraza una moneda y pisa otras dos: el Cuatro de Oros habla de aferrarse. Puede ser ahorro y buena administración, pero también miedo a perder, rigidez o control excesivo. Está bien cuidar lo que tenés; el problema es cuando ese cuidado te cierra.',
+ 'Invertido, puede indicar que empezás a soltar el control y a abrirte. O al revés: gastos descontrolados, pérdidas o un miedo a perder que te paraliza. Buscá el equilibrio entre cuidar y compartir.',
+ 'Seguridad en el vínculo, pero también posesividad o miedo a perder.',
+ 'Soltar el control y confiar más.',
+ 'Cuidá tus recursos sin cerrarte.',
+ 'Abrite a dar y recibir con más confianza.'],
+p5:['dificultades económicas, carencia y sensación de quedar afuera','recuperación, ayuda que llega y salida de la crisis',
+ 'En la imagen clásica, dos figuras caminan en la nieve frente a una ventana iluminada: el Cinco de Oros habla de escasez y de sentirse afuera. Puede ser un momento económico difícil, de cansancio o de soledad. Pero la ventana está ahí: la ayuda existe, hay que pedirla.',
+ 'Invertido, lo peor empieza a quedar atrás. Aparece ayuda, mejora la situación económica o volvés a sentirte parte. Es un momento de recuperación.',
+ 'Sentir soledad o abandono, o una relación en crisis.',
+ 'Reconciliación o superar juntos un momento difícil.',
+ 'Pedí ayuda: no tenés que atravesarlo en soledad.',
+ 'Aprovechá la recuperación y cuidá lo que vuelve.'],
+p6:['generosidad, dar y recibir y equilibrio','deudas, desigualdad y favores con condiciones',
+ 'En la imagen clásica, una figura con una balanza reparte monedas a quienes lo necesitan: el Seis de Oros habla de generosidad y de equilibrio entre dar y recibir. Puede anunciar ayuda que llega, un préstamo, un regalo o la oportunidad de ayudar a otros.',
+ 'Invertido, el intercambio se desequilibra. Puede haber deudas, dependencia, ayuda con condiciones o la sensación de que siempre das más de lo que recibís.',
+ 'Generosidad y reciprocidad en el vínculo.',
+ 'Desequilibrio de poder o de esfuerzo en la pareja.',
+ 'Compartí lo que tenés y aceptá ayuda cuando la necesites.',
+ 'Revisá quién da y quién recibe, y equilibralo.'],
+p7:['paciencia, inversión y crecimiento lento','impaciencia, esfuerzo sin resultados y replanteos',
+ 'En la imagen clásica, una figura apoyada en su herramienta contempla una planta llena de monedas: el Siete de Oros es la espera del agricultor. Sembraste, trabajaste, y ahora toca esperar y evaluar. Los resultados llegan, pero a su tiempo.',
+ 'Invertido, sentís que tanto esfuerzo no rinde. Puede haber impaciencia, frustración o inversiones que no dan frutos. Quizás haya que cambiar la estrategia.',
+ 'Una relación que crece despacio y necesita paciencia.',
+ 'Sentir que ponés mucho y recibís poco.',
+ 'Tené paciencia: lo que sembraste va a dar frutos.',
+ 'Evaluá si vale la pena seguir invirtiendo ahí.'],
+p8:['dedicación, oficio y perfeccionamiento','perfeccionismo, rutina y falta de foco',
+ 'En la imagen clásica, un artesano talla monedas una por una con total concentración: el Ocho de Oros es la dedicación al oficio. Habla de práctica, aprendizaje, trabajo constante y perfeccionamiento. Estás mejorando paso a paso.',
+ 'Invertido, el trabajo se vuelve rutina o perfeccionismo. Puede haber aburrimiento, falta de foco o exigencia excesiva. Recordá por qué empezaste.',
+ 'Trabajar en la relación con compromiso y constancia.',
+ 'Poner más energía en el trabajo que en el vínculo.',
+ 'Practicá y perfeccioná lo tuyo con constancia.',
+ 'Soltá el perfeccionismo y recuperá el sentido.'],
+p9:['independencia, logros y disfrute','dependencia, gastos de más e inseguridad',
+ 'En la imagen clásica, una figura elegante disfruta su jardín lleno de frutos: el Nueve de Oros es la independencia y el disfrute de lo construido. Habla de éxito personal, autosuficiencia, comodidad y bienestar ganado con tu esfuerzo.',
+ 'Invertido, la independencia se tambalea. Puede haber dependencia de otros, gastos excesivos o inseguridad sobre lo que lograste. Revisá tus bases.',
+ 'Estar bien con vos y elegir desde la plenitud, no desde la necesidad.',
+ 'Dependencia emocional o económica en el vínculo.',
+ 'Disfrutá lo que construiste con tu esfuerzo.',
+ 'Recuperá tu independencia y cuidá tus recursos.'],
+p10:['estabilidad duradera, familia y legado','conflictos por dinero, inestabilidad y herencias',
+ 'En la imagen clásica, varias generaciones comparten un patio lleno de monedas: el Diez de Oros es la prosperidad que perdura. Habla de estabilidad familiar, patrimonio, tradiciones y seguridad a largo plazo. Lo que construyas ahora puede trascender.',
+ 'Invertido, las bases familiares o económicas se tambalean. Puede haber conflictos por dinero, herencias o expectativas familiares que pesan.',
+ 'Un vínculo sólido, con proyección familiar y a largo plazo.',
+ 'Conflictos familiares o materiales que afectan la relación.',
+ 'Construí pensando en el largo plazo.',
+ 'Ordená los temas de dinero y familia con diálogo.'],
+p11:['aprendizaje, estudio y nuevas oportunidades','postergación, poco progreso y desinterés',
+ 'La Sota de Oros contempla una moneda con mucha atención: es la figura del aprendiz. Representa aprendizaje, nuevos estudios, oportunidades concretas y una ambición sana. Puede anunciar una propuesta laboral, un curso o el inicio de un proyecto práctico.',
+ 'Invertida, el aprendizaje se estanca. Puede haber postergación, falta de interés o metas poco realistas. Empezá con un paso concreto.',
+ 'Un vínculo que empieza despacio y con intenciones serias.',
+ 'Falta de compromiso o de esfuerzo.',
+ 'Aprendé algo nuevo y avanzá paso a paso.',
+ 'Dejá de postergar y empezá hoy.'],
+p12:['constancia, responsabilidad y trabajo duro','estancamiento, aburrimiento y pereza',
+ 'El Caballero de Oros avanza despacio en un caballo pesado: es la constancia. Representa responsabilidad, trabajo duro, paciencia y confiabilidad. No es el más rápido, pero siempre llega.',
+ 'Invertido, la constancia se vuelve rutina o estancamiento. Puede haber aburrimiento, pereza o resistencia al cambio. Recuperá la motivación.',
+ 'Una relación estable, leal y comprometida.',
+ 'Rutina o falta de iniciativa en el vínculo.',
+ 'Avanzá despacio pero sin parar.',
+ 'Salí de la rutina y recuperá las ganas.'],
+p13:['practicidad, cuidado y abundancia','descuido personal, desequilibrio y dependencia',
+ 'La Reina de Oros sostiene una moneda en su regazo, rodeada de naturaleza: es el cuidado práctico. Representa abundancia, calidez, sentido común y la capacidad de hacer de cualquier lugar un hogar. Sabe cuidar a otros y a sus recursos.',
+ 'Invertida, el cuidado se desequilibra. Puede haber descuido personal, exceso de trabajo o dependencia. Cuidate a vos también.',
+ 'Un amor cálido, estable y protector.',
+ 'Descuidarse por cuidar a otros, o desequilibrio en las tareas compartidas.',
+ 'Cuidá tus recursos y a los tuyos con sentido práctico.',
+ 'Dedicate tiempo a vos.'],
+p14:['prosperidad, seguridad y éxito','materialismo, terquedad y mala administración',
+ 'El Rey de Oros se sienta en un trono decorado con toros y uvas: es el éxito material. Representa prosperidad, seguridad, buena administración y generosidad. Sabe hacer crecer lo que toca.',
+ 'Invertido, la prosperidad se desvía. Puede haber materialismo, terquedad, avaricia o malas decisiones financieras.',
+ 'Estabilidad, protección y compromiso.',
+ 'Priorizar lo material o el control en la relación.',
+ 'Administrá con sabiduría y generosidad.',
+ 'No pongas lo material por encima de todo.']
+});
+DECK.forEach(c => { const t = TXT[c.id]; Object.assign(c, {tema:t[0], temaR:t[1], largo:t[2], largoR:t[3], amor:t[4], amorR:t[5], cons:t[6], consR:t[7]}); });
+
+/* ===== Mesa de tarot ===== */
+(() => {
+'use strict';
+const $ = (s, el=document) => el.querySelector(s);
+const $$ = (s, el=document) => [...el.querySelectorAll(s)];
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* Entero al azar entre 0 y n-1, criptográfico y sin sesgo (descarta los valores que generarían sesgo) */
+function randInt(n){ const lim = Math.floor(4294967296 / n) * n, a = new Uint32Array(1); do { crypto.getRandomValues(a); } while (a[0] >= lim); return a[0] % n; }
+const CH = 1.7; // alto / ancho de la carta
+
+/* ---------- texturas ---------- */
+const noise = `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.12  0 0 0 0 0.09  0 0 0 .6 0'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`;
+document.documentElement.style.setProperty('--noise', `url("data:image/svg+xml,${encodeURIComponent(noise)}")`);
+document.documentElement.style.setProperty('--back', `url("data:image/svg+xml,${encodeURIComponent(backSVG())}")`);
+
+/* ---------- tiradas ---------- */
+const L1 = {gx:.2, gy:.2, max:210, labels:true, at:[[0,0]]};
+const L3 = {gx:.2, gy:.2, max:180, labels:true, at:[[0,0],[1,0],[2,0]]};
+const SPREADS = [
+  {k:'dia', name:'Carta del día', short:'1 carta', layout:L1, pos:[['Tu carta de hoy','La energía que te acompaña hoy y dónde poner la atención.']]},
+  {k:'tres', name:'Pasado, presente y futuro', short:'3 cartas', layout:L3, pos:[['Pasado','Lo que trae la situación hasta acá.'],['Presente','Lo que está pasando ahora.'],['Futuro','Hacia dónde va todo si seguís por este camino.']]},
+  {k:'consejo', name:'Situación y consejo', short:'3 cartas', layout:L3, pos:[['La situación','Cómo están las cosas hoy.'],['El obstáculo','Lo que te frena o complica.'],['El consejo','Qué te conviene hacer.']]},
+  {k:'amor', name:'Amor y vínculos', short:'3 cartas', layout:L3, pos:[['Vos','Cómo estás y qué ponés en el vínculo.'],['La otra persona','Lo que siente o trae la otra parte.'],['El vínculo','La energía de la relación y hacia dónde va.']]},
+  {k:'sino', name:'Sí o no', short:'1 carta', layout:L1, pos:[['La respuesta','Pensá en una pregunta que se pueda responder con sí o no.']]},
+  {k:'cruz', name:'Cruz Celta', short:'10 cartas', layout:{gx:.42, gy:.1, max:118, labels:false,
+     at:[[1,1.5],[1,1.5,90],[1,2.6],[0,1.5],[1,.4],[2,1.5],[3.2,3],[3.2,2],[3.2,1],[3.2,0]]},
+   pos:[['La situación','El centro de la pregunta: lo que estás viviendo.'],['El desafío','Lo que se cruza: el obstáculo o la tensión principal.'],['La raíz','La base de la situación, lo que viene de lejos.'],['El pasado reciente','Lo que está terminando o quedando atrás.'],['La meta','Lo que querés lograr o lo mejor que puede pasar.'],['El futuro cercano','Lo que viene en las próximas semanas.'],['Vos','Tu actitud y cómo te estás parando frente a esto.'],['Tu entorno','Las personas y circunstancias que te rodean.'],['Esperanzas y miedos','Lo que deseás y lo que temés (a veces es lo mismo).'],['El resultado','Hacia dónde tiende todo si nada cambia.']]}
+];
+const SP = Object.fromEntries(SPREADS.map(s=>[s.k,s]));
+
+/* ---------- estado ---------- */
+const state = {
+  spread: SP.tres, reversals: true,
+  deck: DECK.map(c => ({id:c.id, r:false})),
+  phase: 'idle', shuffled: false,
+  piles: [], fanCards: [], fanEls: [], fanCW: 0, taken: [],
+  picked: [], flipped: [], landed: 0, slotEls: [], slotGeo: [], cardW: 0, cardH: 0,
+  startedAt: 0, lastFlip: -1, busy: false
+};
+
+/* ---------- barajado perfecto (Fisher–Yates) ----------
+   Cada uno de los órdenes posibles de las 78 cartas tiene exactamente la misma probabilidad,
+   y cada carta tiene 50% de quedar invertida (si las invertidas están activadas). */
+function fairShuffle(deck){
+  const d = deck.map(c => ({id:c.id, r: state.reversals ? randInt(2) === 1 : false}));
+  for (let i = d.length - 1; i > 0; i--){ const j = randInt(i + 1); const t = d[i]; d[i] = d[j]; d[j] = t; }
+  return d;
+}
+
+/* ---------- elementos de carta ---------- */
+function makeCard(c){
+  const el = document.createElement('div'); el.className = 'card';
+  el.innerHTML = `<div class="card-inner"><div class="face back"></div><div class="face front"><div class="art${c.r?' rev':''}">${frontSVG(BY_ID[c.id])}</div></div></div>`;
+  return el;
+}
+const mini = c => `<div class="mini"><div class="art${c.r?' rev':''}">${frontSVG(BY_ID[c.id])}</div></div>`;
+const backLayer = () => '<div class="face back"></div>';
+
+/* ---------- medidas ---------- */
+const innerW = () => { const t = $('#table'); const cs = getComputedStyle(t); return t.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight); };
+const stackW = () => clamp(innerW()*.26, 84, 124);
+
+/* ---------- slots de la tirada ---------- */
+function buildSlots(){
+  const box = $('#slots'); box.innerHTML = ''; state.slotEls = [];
+  const sp = state.spread;
+  sp.layout.at.forEach((a,i) => {
+    const s = document.createElement('div'); s.className = 'slot';
+    s.innerHTML = `<div class="ph"${a[2] ? ' style="align-items:flex-start; padding-top:9%"' : ''}><span${a[2] ? ` style="transform:rotate(${-a[2]}deg)"` : ''}>${i+1}</span></div>` +(sp.layout.labels ? `<div class="slot-label">${sp.pos[i][0]}</div>` : `<div class="slot-num">${i+1}</div>`);
+    box.appendChild(s); state.slotEls.push(s);
+  });
+  layoutSlots();
+}
+function layoutSlots(){
+  const L = state.spread.layout, W = innerW();
+  const units = Math.max(...L.at.map(a => a[0]*(1+L.gx) + 1));
+  const cw = Math.floor(Math.min(L.max, W/units)), ch = Math.round(cw*CH);
+  state.cardW = cw; state.cardH = ch;
+  const totalW = units*cw;
+  const hUnits = Math.max(...L.at.map(a => a[1]*(1+L.gy) + 1));
+  const box = $('#slots');
+  box.style.width = totalW + 'px';
+  box.style.height = (hUnits*ch + (L.labels ? 44 : 4)) + 'px';
+  state.slotGeo = L.at.map(a => ({x: a[0]*(1+L.gx)*cw, y: a[1]*(1+L.gy)*ch, rot: a[2]||0}));
+  state.slotEls.forEach((s,i) => {
+    const g = state.slotGeo[i];
+    Object.assign(s.style, {left:g.x+'px', top:g.y+'px', width:cw+'px', height:ch+'px', transform: g.rot ? `rotate(${g.rot}deg)` : '', zIndex: g.rot ? 3 : 1});
+    const ph = $('.ph', s); if (ph) ph.style.fontSize = Math.max(20, cw*.3) + 'px';
+  });
+}
+
+/* ---------- mazo, pilas y abanico ---------- */
+const baseT = i => `translate(${f1(-i*.45)}px, ${f1(-i*.6)}px)`;
+function renderStack(){
+  const dz = $('#deckzone'); dz.innerHTML = ''; dz.style.height = '';
+  const w = stackW();
+  const st = document.createElement('button'); st.type = 'button'; st.className = 'stack'; st.id = 'stack';
+  st.setAttribute('aria-label', 'Mazo de cartas: tocá para barajar');
+  st.style.width = w+'px'; st.style.height = Math.round(w*CH)+'px';
+  for (let i=0;i<10;i++){ const L = document.createElement('div'); L.className = 'layer'; L.style.transform = baseT(i); L.innerHTML = backLayer(); st.appendChild(L); }
+  st.onclick = () => { if (state.phase==='idle' || state.phase==='ready') shuffle(); };
+  dz.appendChild(st);
+  const cap = document.createElement('p'); cap.className = 'deckcap'; cap.textContent = state.deck.length + ' cartas';
+  dz.appendChild(cap);
+}
+async function animateShuffle(){
+  const st = $('#stack'); if (!st) return;
+  const layers = $$('.layer', st), w = st.offsetWidth, half = layers.length/2;
+  if (RM){ await sleep(250); return; }
+  const out = i => `translate(${i<half ? -w*.62 : w*.62}px, ${f1(-(i%half)*1.1)}px) rotate(${i<half?-7:7}deg)`;
+  for (let rep=0; rep<3; rep++){
+    await Promise.all(layers.map((L,i) => L.animate([{transform:baseT(i)},{transform:out(i)}], {duration:230, easing:'ease-out', fill:'forwards'}).finished));
+    const order = []; for (let j=0;j<half;j++){ order.push(j, j+half); }
+    await Promise.all(layers.map((L,i) => { const d = order.indexOf(i)*30;
+      return L.animate([{transform:out(i)},{transform:baseT(i)}], {duration:260, delay:d, easing:'cubic-bezier(.3,.7,.3,1)', fill:'forwards'}).finished; }));
+    layers.forEach(L => L.getAnimations().forEach(a => a.cancel()));
+  }
+  await st.animate([{transform:'translateY(0)'},{transform:'translateY(-6px)'},{transform:'translateY(0)'}], {duration:260, easing:'ease-out'}).finished;
+}
+function renderPiles(){
+  const dz = $('#deckzone'); dz.innerHTML = '';
+  const w = clamp(Math.min(stackW(), (innerW()-60)/3), 70, 118), h = Math.round(w*CH);
+  const wrap = document.createElement('div'); wrap.className = 'piles';
+  state.piles.forEach((p,pi) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pile';
+    b.setAttribute('aria-label', `Pila ${pi+1} de 3`);
+    b.style.width = w+'px'; b.style.height = h+'px';
+    const nL = clamp(Math.round(p.length/6), 3, 6);
+    for (let i=0;i<nL;i++){ const L = document.createElement('div'); L.className = 'layer'; L.style.transform = baseT(i); L.innerHTML = backLayer(); b.appendChild(L); }
+    b.onclick = () => choosePile(pi);
+    wrap.appendChild(b);
+  });
+  dz.appendChild(wrap);
+  if (!RM){ const ps = $$('.pile', wrap); const gap = ps[1].offsetLeft - ps[0].offsetLeft;
+    ps.forEach((p,i) => p.animate([{transform:`translateX(${(1-i)*gap}px)`, opacity:.6},{transform:'translateX(0)', opacity:1}], {duration:420, delay:i*60, easing:'cubic-bezier(.2,.8,.2,1)'})); }
+}
+function fanGeometry(count){
+  const W = innerW();
+  const cw = Math.round(clamp(W*.085, 50, 84)), ch = Math.round(cw*CH);
+  let rows = 1;
+  while (rows < 4 && (W - cw - 8) / (Math.ceil(count/rows) - 1) < 10.5) rows++;
+  const per = Math.ceil(count/rows), step = (W - cw - 8) / Math.max(1, per-1), rowGap = Math.round(ch*.52), sag = rows === 1 ? 26 : 14;
+  const pos = [];
+  for (let i=0;i<count;i++){
+    const r = Math.floor(i/per), k = i % per, n = Math.min(per, count - r*per);
+    const t = n > 1 ? k/(n-1) - .5 : 0, rowW = (n-1)*step, x0 = (W - cw - rowW)/2;
+    pos.push({x: f1(x0 + k*step), y: f1(18 + r*rowGap + sag*4*t*t), rot: f1(t*(rows===1?18:10))});
+  }
+  return {cw, ch, pos, height: 18 + (rows-1)*rowGap + ch + sag + 10};
+}
+function renderFan(){
+  const dz = $('#deckzone'); dz.innerHTML = '';
+  const cards = state.fanCards, g = fanGeometry(cards.length);
+  state.fanCW = g.cw; state.fanEls = [];
+  const fan = document.createElement('div'); fan.className = 'fan'; fan.style.height = g.height+'px';
+  cards.forEach((c,i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'fc';
+    b.setAttribute('aria-label', `Carta boca abajo ${i+1}`);
+    b.style.width = g.cw+'px'; b.style.height = g.ch+'px';
+    b.innerHTML = backLayer();
+    b.onclick = () => pick(i);
+    fan.appendChild(b); state.fanEls.push(b);
+  });
+  dz.appendChild(fan);
+  placeFan(g, true);
+}
+function placeFan(g, animate){
+  const W = innerW(), ox = (W - g.cw)/2;
+  state.fanEls.forEach((b,i) => {
+    const p = g.pos[i];
+    b.style.left = p.x+'px'; b.style.top = p.y+'px'; b.style.width = g.cw+'px'; b.style.height = g.ch+'px'; b.style.setProperty('--rot', p.rot+'deg');
+    if (animate && !RM) b.animate([{transform:`translate(${f1(ox-p.x)}px, ${f1(-p.y)}px) rotate(0deg)`},{transform:`translate(0,0) rotate(${p.rot}deg)`}], {duration:520, delay:i*7, easing:'cubic-bezier(.2,.8,.2,1)', fill:'backwards'});
+  });
+  $('.fan').style.height = g.height+'px';
+}
+
+/* ---------- flujo de la tirada ---------- */
+async function shuffle(){
+  if (state.busy) return;
+  state.busy = true; state.phase = 'shuffling'; update();
+  const anim = animateShuffle();
+  state.deck = fairShuffle(state.deck);
+  await anim;
+  state.shuffled = true; state.phase = 'ready'; state.busy = false; update();
+}
+function startCut(){
+  const n = state.deck.length;
+  const a = 18 + randInt(12), b = 18 + randInt(12);
+  state.piles = [state.deck.slice(0,a), state.deck.slice(a,a+b), state.deck.slice(a+b)];
+  state.phase = 'cut'; renderPiles(); update();
+  void n;
+}
+async function choosePile(pi){
+  if (state.phase !== 'cut' || state.busy) return;
+  state.busy = true;
+  const ps = $$('.pile');
+  if (!RM){
+    const gap = ps[1].offsetLeft - ps[0].offsetLeft;
+    await Promise.all(ps.map((p,i) => p.animate(
+      i===pi ? [{transform:'translate(0,0)'},{transform:`translate(${(1-i)*gap}px,-10px)`}] : [{transform:'translate(0,0)', opacity:1},{transform:`translate(${(1-i)*gap}px,0)`, opacity:.5}],
+      {duration:380, easing:'cubic-bezier(.3,.7,.3,1)', fill:'forwards'}).finished));
+  }
+  const others = state.piles.filter((_,i) => i !== pi);
+  state.deck = state.piles[pi].concat(...others);
+  state.fanCards = state.deck.slice(); state.taken = state.fanCards.map(() => false);
+  state.picked = []; state.flipped = state.spread.pos.map(() => false); state.landed = 0;
+  state.phase = 'pick'; state.busy = false;
+  renderFan(); update();
+  const fanEl = $('.fan');
+  if (fanEl && fanEl.getBoundingClientRect().bottom > innerHeight) fanEl.scrollIntoView({behavior: RM ? 'auto' : 'smooth', block:'nearest'});
+}
+async function pick(i){
+  const need = state.spread.pos.length;
+  if (state.phase !== 'pick' || state.taken[i] || state.picked.length >= need) return;
+  const slotIdx = state.picked.length, c = state.fanCards[i];
+  state.taken[i] = true; state.picked.push(c);
+  const fc = state.fanEls[i], from = fc.getBoundingClientRect();
+  const rot0 = parseFloat(fc.style.getPropertyValue('--rot')) || 0;
+  fc.classList.add('taken'); fc.disabled = true;
+  update();
+  const g = state.slotGeo[slotIdx], sr = $('#slots').getBoundingClientRect(), W = state.cardW, H = state.cardH;
+  const tx = sr.left + g.x, ty = sr.top + g.y;
+  const fl = document.createElement('div'); fl.className = 'flyer';
+  Object.assign(fl.style, {left:tx+'px', top:ty+'px', width:W+'px', height:H+'px'});
+  fl.innerHTML = backLayer(); document.body.appendChild(fl);
+  const s = state.fanCW / W, dx = (from.left+from.width/2) - (tx+W/2), dy = (from.top+from.height/2) - (ty+H/2);
+  if (!RM) await fl.animate([{transform:`translate(${dx}px,${dy}px) scale(${s}) rotate(${rot0}deg)`},{transform:`translate(0,0) scale(1) rotate(${g.rot}deg)`}],
+    {duration:640, easing:'cubic-bezier(.2,.75,.25,1)'}).finished;
+  fl.remove();
+  mountSlotCard(slotIdx, c);
+  state.landed++;
+  if (state.landed === need) enterReveal();
+}
+async function pickRandom(){
+  if (state.phase !== 'pick') return;
+  const need = state.spread.pos.length;
+  while (state.phase === 'pick' && state.picked.length < need){
+    const free = state.taken.map((t,i) => t ? -1 : i).filter(i => i >= 0);
+    pick(free[randInt(free.length)]);
+    await sleep(RM ? 0 : 260);
+  }
+}
+function mountSlotCard(i, c){
+  const slot = state.slotEls[i];
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'slotcard';
+  b.setAttribute('aria-label', `Posición ${i+1}: carta boca abajo. Tocá para darla vuelta.`);
+  b.appendChild(makeCard(c));
+  b.onclick = () => onSlotClick(i);
+  slot.appendChild(b); slot.classList.add('filled');
+}
+async function enterReveal(){
+  state.phase = 'reveal';
+  state.deck = state.fanCards.filter((_,i) => !state.taken[i]);
+  state.startedAt = Date.now();
+  update();
+  const fan = $('.fan');
+  if (fan && !RM) await fan.animate([{opacity:1},{opacity:0}], {duration:350, fill:'forwards'}).finished;
+  if (state.phase === 'reveal' || state.phase === 'done') $('#deckzone').innerHTML = '';
+}
+function onSlotClick(i){
+  if (state.phase === 'reveal' && !state.flipped[i]) flip(i);
+  else if (state.flipped[i]) openZoom(state.picked[i], i);
+}
+function flip(i){
+  if (state.flipped[i]) return;
+  state.flipped[i] = true; state.lastFlip = i;
+  const b = $('.slotcard', state.slotEls[i]), c = state.picked[i], card = BY_ID[c.id];
+  $('.card-inner', b).classList.add('flipped');
+  b.setAttribute('aria-label', `${state.spread.pos[i][0]}: ${card.name}${c.r?' (invertida)':''}. Tocá para verla de cerca.`);
+  if (!RM) b.animate([{transform:'translateY(0) scale(1)'},{transform:'translateY(-10px) scale(1.07)', offset:.45},{transform:'translateY(0) scale(1)'}], {duration:900, easing:'ease-in-out'});
+  setTimeout(() => {
+    renderLive(i);
+    if (state.phase === 'reveal' && state.flipped.every(Boolean)) finish();
+  }, RM ? 0 : 480);
+}
+async function flipAll(){
+  for (let i=0;i<state.flipped.length;i++){ if (!state.flipped[i]){ flip(i); await sleep(RM ? 0 : 340); } }
+}
+function finish(){
+  state.phase = 'done';
+  const rec = liveRecord();
+  renderReading($('#reading'), rec, null, state.lastFlip);
+  saveRecord(rec);
+  update();
+}
+function resetReading(){
+  if (state.phase === 'pick' || state.phase === 'cut') state.deck = state.fanCards.length ? state.fanCards.slice() : state.deck;
+  state.deck = state.deck.concat(state.picked.filter(p => !state.deck.includes(p)));
+  if (state.deck.length !== 78){ const have = new Set(state.deck.map(c=>c.id)); DECK.forEach(c => { if (!have.has(c.id)) state.deck.push({id:c.id, r:false}); }); }
+  state.picked = []; state.flipped = []; state.fanCards = []; state.taken = []; state.landed = 0;
+  state.shuffled = false; state.phase = 'idle';
+  $('#reading').innerHTML = '';
+  buildSlots(); renderStack(); update();
+}
+const liveRecord = () => ({t: state.startedAt || Date.now(), k: state.spread.k, q: $('#question').value.trim(), c: state.picked.map(p => ({id:p.id, r:p.r}))});
+
+/* ---------- lectura ---------- */
+function ynOf(card, r){ let v = card.yn; if (r) v = v === 'si' ? 'quizas' : 'no'; return v; }
+const YN = {si:['Sí','Las cartas acompañan: la energía va a tu favor.'], no:['No','Por ahora, no. La carta muestra trabas o un momento poco favorable.'], quizas:['Quizás','Depende: hay condiciones o cosas que todavía se están definiendo. Leé el mensaje de la carta.']};
+const fmtDate = t => new Date(t).toLocaleString('es-AR', {day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'});
+/* Datos de una carta tal como salió (al derecho o invertida) */
+function cv(c){
+  const card = BY_ID[c.id], r = !!c.r;
+  const g = /^Los /.test(card.name) ? ' invertidos' : /^(La |Reina|Sota)/.test(card.name) ? ' invertida' : ' invertido';
+  return {card, r, pol: ynOf(card, r), name: card.name + (r ? g : ''),
+    t: r ? card.temaR : card.tema, keys: r ? card.rev : card.up, mean: r ? card.largoR : card.largo,
+    amor: r ? card.amorR : card.amor, cons: r ? card.consR : card.cons};
+}
+const YNWORD = {si:'un sí', no:'un no', quizas:'un quizás'};
+/* Interpretación según la posición de la tirada */
+const TPL = {
+  dia: [x => `Hoy te acompaña una energía de ${x.t}. Fijate cómo aparece en lo cotidiano: en una conversación, en una decisión chica o en cómo te sentís al final del día.`],
+  tres: [
+    x => `En el pasado de esta situación hay una etapa de ${x.t}. Eso es lo que te trajo hasta acá, y todavía se siente en cómo vivís lo que pasa hoy.`,
+    x => `Hoy el foco está puesto en ${x.t}. Es la energía con la que te toca trabajar ahora mismo, y la que más peso tiene en esta tirada.`,
+    x => `Si todo sigue su curso, lo que viene trae una energía de ${x.t}. No es un destino fijo: es hacia donde apunta el camino actual, y lo que hagas hoy puede modificarlo.`],
+  consejo: [
+    x => `La situación hoy gira en torno a ${x.t}. Ese es el punto de partida de tu pregunta.`,
+    x => `Lo que te frena o complica tiene que ver con ${x.t}. ` + (x.pol==='si' ? 'Aunque es una carta luminosa, en este lugar sugiere que esa energía está en exceso, mal canalizada, o que te cuesta permitírtela.' : 'Reconocerlo ya es la mitad del trabajo.'),
+    x => `En el lugar del consejo, esta carta te dice: «${x.cons}» ` + (x.pol==='no' ? 'Aunque es una carta exigente, como consejo te muestra qué aceptar o qué dejar de evitar para poder avanzar.' : 'Es una invitación concreta a actuar desde esta energía.')],
+  amor: [
+    x => `En el vínculo, vos estás atravesando un momento de ${x.t}. Así es como llegás hoy a esta relación.`,
+    x => `La otra persona está en un momento de ${x.t}. Eso influye en cómo se vincula con vos ahora.`,
+    x => `La relación en sí se mueve en una energía de ${x.t}. Es lo que se está construyendo entre los dos.`],
+  sino: [x => `La carta habla de ${x.t}, y por eso la respuesta se inclina hacia ${YNWORD[x.pol]}.`],
+  cruz: [
+    x => `El corazón de tu pregunta está en ${x.t}. Es lo que estás viviendo, el centro alrededor del cual gira todo lo demás.`,
+    x => `Lo que se cruza en tu camino tiene que ver con ${x.t}. ` + (x.pol==='si' ? 'Al ser una carta favorable, el desafío no es algo malo: se trata de aprender a sostener esa energía, o de no quedarte solo en ella.' : 'Es la tensión principal que tenés que atravesar para avanzar.'),
+    x => `En la raíz de todo esto hay una base de ${x.t}. Viene de lejos y explica bastante de lo que pasa hoy.`,
+    x => `Viene quedando atrás una etapa de ${x.t}. Su influencia se está apagando, aunque todavía deja huella.`,
+    x => `Lo mejor que puede pasar, o lo que conscientemente buscás, se relaciona con ${x.t}.`,
+    x => `En las próximas semanas se activa una energía de ${x.t}. Es lo que está por llegar en el corto plazo.`,
+    x => `Tu actitud frente a esto está teñida de ${x.t}. Así te estás parando hoy ante la situación.`,
+    x => `Tu entorno (las personas y circunstancias que te rodean) te trae una energía de ${x.t}.`,
+    x => `En tus esperanzas y miedos se mueve una energía de ${x.t}. ` + ({si:'Es algo que deseás, aunque quizás también te dé un poco de miedo que suceda.', no:'Puede ser un miedo que te ronda más de lo que te animás a admitir.', quizas:'Es una mezcla de deseo y temor: todavía no tenés claro si querés que pase.'})[x.pol],
+    x => `Si nada cambia, todo tiende hacia ${x.t}. Es el resultado más probable del camino actual, no una sentencia: lo que hagas a partir de hoy puede modificarlo.`]
+};
+function entryHTML(rec, i, isNew){
+  const sp = SP[rec.k], c = rec.c[i], x = cv(c), [pt, pd] = sp.pos[i];
+  const yn = rec.k === 'sino' ? `<div class="yn"><b>${YN[x.pol][0]}</b>${YN[x.pol][1]}</div>` : '';
+  return `<article class="entry${isNew?' new':''}">
+    <div class="entry-card">${mini(c)}</div>
+    <div>
+      <div class="pos">${sp.pos.length>1?`<span class="n">${i+1}</span>`:''}${pt}</div>
+      <p class="posdesc">${pd}</p>
+      <h3 class="cname">${x.card.name} <span class="orient">· ${x.r?'invertida':'al derecho'}</span></h3>
+      <p class="keys">${x.keys}</p>${yn}
+      <h4 class="sec">Qué significa</h4><p class="mean">${x.mean}</p>
+      <h4 class="sec">En esta posición</h4><p class="mean">${TPL[rec.k][i](x)}</p>
+      ${rec.k==='amor' ? `<h4 class="sec">En el amor</h4><p class="mean">${x.amor}</p>` : ''}
+      <p class="tip"><span>Consejo</span>${x.cons}</p>
+    </div></article>`;
+}
+
+/* ---------- lectura general ---------- */
+const EL = {w:'fuego', c:'agua', s:'aire', p:'tierra'};
+const NUM = {2:'decisiones, vínculos y equilibrio', 3:'crecimiento, creatividad y expansión', 4:'estabilidad y estructura', 5:'cambios, conflictos y desafíos', 6:'armonía, generosidad y reconciliación', 7:'introspección, pruebas y estrategia', 8:'movimiento, poder y avance', 9:'culminación: la meta está cerca', 10:'cierre de ciclo y plenitud'};
+const PSCORE = {si:1, quizas:0, no:-1};
+function elementPair(a, b){
+  const ea = a.card.arc, eb = b.card.arc;
+  if (ea==='M' && eb==='M') return 'Los dos están atravesando procesos profundos (dos Arcanos Mayores): es un vínculo con mucho peso, que los transforma a ambos.';
+  if (ea==='M' || eb==='M') return `${ea==='M' ? 'Vos estás' : 'La otra persona está'} atravesando un proceso más profundo (un Arcano Mayor), y eso puede pesar más que lo cotidiano en la relación.`;
+  const A = EL[ea], B = EL[eb], pair = [A,B].sort().join('-');
+  if (A === B) return `Los dos están en la misma sintonía (${A}): se entienden con facilidad, aunque pueden potenciar tanto lo bueno como lo difícil.`;
+  if (pair==='aire-fuego' || pair==='agua-tierra') return `Sus energías se complementan (${A} y ${B}): una alimenta a la otra.`;
+  if (pair==='agua-fuego' || pair==='aire-tierra') return `Sus energías son opuestas (${A} y ${B}): hay atracción, pero también roces si no se respetan los tiempos de cada uno.`;
+  return `Sus energías son distintas (${A} y ${B}): pueden aprender mucho uno del otro si hay paciencia.`;
+}
+function narrative(rec){
+  const xs = rec.c.map(cv), b = x => `<b>${x.name}</b>`, P = [];
+  if (rec.k === 'dia'){
+    const x = xs[0];
+    P.push(`Tu carta de hoy es ${b(x)}: un día marcado por ${x.t}.`);
+    P.push({si:'Es una energía favorable: aprovechala para avanzar en lo que te importa.', no:'Es una energía exigente: tomalo como un día para ir con calma, no forzar nada y cuidarte.', quizas:'Es una energía de matices: el día va a depender bastante de cómo lo encares.'}[x.pol]);
+  } else if (rec.k === 'sino'){
+    const x = xs[0];
+    P.push(`La respuesta es <b>${YN[x.pol][0].toLowerCase()}</b>. Salió ${b(x)}, una carta de ${x.t}.`);
+    P.push({si:'Las cartas acompañan lo que preguntás: la energía va a tu favor, sobre todo si actuás en consecuencia.', no:'Por ahora el camino no está abierto. No significa “nunca”: significa que hoy hay trabas que conviene mirar antes de insistir.', quizas: x.r ? 'No hay un sí ni un no rotundo. Al salir invertida, la carta sugiere que algo tiene que destrabarse primero.' : 'No hay un sí ni un no rotundo: la respuesta depende de cosas que todavía se están definiendo, o de lo que vos hagas.'}[x.pol]);
+  } else if (rec.k === 'tres'){
+    const [a, n, f] = xs;
+    P.push(`Tu historia viene de una etapa de ${a.t} (${b(a)}). Hoy estás en un momento de ${n.t} (${b(n)}), y el camino apunta hacia ${f.t} (${b(f)}).`);
+    const d = PSCORE[f.pol] - PSCORE[a.pol];
+    P.push(d > 0 ? 'La tendencia es de mejora: venís de algo más trabado y vas hacia algo más favorable. Lo que estás haciendo hoy está dando resultado.'
+      : d < 0 ? 'La tendencia pide atención: lo que viene se presenta más desafiante que lo que quedó atrás. No es para asustarse, sino para prepararte y actuar ahora, mientras el presente todavía te da margen.'
+      : a.pol === 'si' ? 'Es una secuencia favorable: lo bueno que viene de atrás tiene continuidad.'
+      : a.pol === 'no' ? 'La secuencia muestra un período exigente que se sostiene en el tiempo; justamente por eso, el presente es la clave para cambiar el rumbo.'
+      : 'Es una secuencia de matices: nada está definido del todo, y el presente es el punto de inflexión.');
+  } else if (rec.k === 'consejo'){
+    const [s, o, c] = xs;
+    P.push(`Tu situación gira en torno a ${s.t} (${b(s)}). Lo que la complica es ${o.t} (${b(o)}). Y el consejo de ${b(c)} es claro: «${c.cons}»`);
+    P.push(c.pol === 'no' ? 'El consejo no es cómodo: a veces la salida implica aceptar algo difícil en lugar de evitarlo.'
+      : o.pol === 'no' && c.pol === 'si' ? 'La buena noticia es que el consejo es más fuerte que el obstáculo: tenés con qué resolverlo.'
+      : s.pol === 'si' ? 'La base de la situación es buena; se trata de destrabar lo que la frena.'
+      : 'Es un proceso: identificar el obstáculo ya es empezar a resolverlo.');
+  } else if (rec.k === 'amor'){
+    const [v, o, r] = xs;
+    P.push(`Vos estás en un momento de ${v.t} (${b(v)}), y la otra persona, en un momento de ${o.t} (${b(o)}). Lo que se construye entre los dos se mueve en una energía de ${r.t} (${b(r)}).`);
+    P.push(elementPair(v, o));
+    P.push({si:'La carta del vínculo es favorable: hay una buena base para que la relación crezca.', no:'La carta del vínculo muestra un momento difícil: hace falta diálogo y voluntad de los dos.', quizas:'El vínculo está en un momento de definición: mucho depende de lo que ambos elijan.'}[r.pol]);
+  } else if (rec.k === 'cruz'){
+    const x = xs;
+    P.push(`En el centro de tu pregunta está ${b(x[0])}, con una energía de ${x[0].t}. Se le cruza ${b(x[1])}, que trae ${x[1].t}. Esa tensión entre las dos cartas es el núcleo de lo que estás viviendo.`);
+    P.push(`Todo esto viene de una raíz de ${x[2].t} (${b(x[2])}) y de un pasado reciente marcado por ${x[3].t} (${b(x[3])}). Lo que buscás se relaciona con ${x[4].t} (${b(x[4])}), y en el corto plazo se activa una energía de ${x[5].t} (${b(x[5])}).`);
+    P.push(`En cuanto a vos, tu actitud está teñida de ${x[6].t} (${b(x[6])}). Tu entorno aporta ${x[7].t} (${b(x[7])}), y en tus esperanzas y miedos se mueve una energía de ${x[8].t} (${b(x[8])}).`);
+    P.push(`El resultado probable es ${b(x[9])}: ${x[9].t}. ` + {si:'Es un desenlace favorable.', no:'Es un desenlace exigente, pero la tirada muestra dónde podés intervenir: mirá especialmente tu actitud (carta 7) y lo que buscás (carta 5).', quizas:'El desenlace todavía está abierto y depende mucho de tus próximas decisiones.'}[x[9].pol]
+      + (x[4].pol === 'si' && x[9].pol === 'si' ? ' Además, está en sintonía con lo que buscás (carta 5): vas por buen camino.' : ''));
+  }
+  return P;
+}
+const KEYCARD = {dia:0, sino:0, tres:1, consejo:2, amor:0, cruz:6};
+function summaryLines(rec){
+  const cards = rec.c.map(c => ({card:BY_ID[c.id], r:c.r})), n = cards.length, out = [];
+  const majors = cards.filter(x => x.card.arc==='M').length;
+  const suitN = {w:0,c:0,s:0,p:0}; cards.forEach(x => { if (x.card.arc!=='M') suitN[x.card.arc]++; });
+  const revN = cards.filter(x => x.r).length;
+  const SUITMSG = {w:'Bastos (fuego): energía, proyectos y ganas de actuar.', c:'Copas (agua): el tema es emocional, de vínculos y sentimientos.', s:'Espadas (aire): pensamientos, decisiones y alguna tensión mental.', p:'Oros (tierra): trabajo, dinero, cuerpo y cosas concretas.'};
+  if (n === 1){
+    const x = cards[0];
+    out.push(x.card.arc==='M' ? 'Es un Arcano Mayor: un mensaje con peso, que va más allá del día a día.' : `Es una carta de ${SUITMSG[x.card.arc]}`);
+    if (x.card.arc!=='M' && x.card.n > 10) out.push('Es una figura de la corte: puede hablar de una persona concreta o de una actitud que te toca asumir.');
+    if (x.r) out.push('Salió invertida: esa energía está trabada o se está viviendo hacia adentro.');
+    return out;
+  }
+  if (majors/n >= .5) out.push(`Salieron muchos Arcanos Mayores (${majors} de ${n}): es un momento importante, con temas profundos que van más allá de lo cotidiano.`);
+  else if (majors === 0) out.push('No salió ningún Arcano Mayor: la situación está en tus manos y depende de decisiones del día a día.');
+  const sorted = Object.entries(suitN).sort((a,b) => b[1]-a[1]);
+  if (sorted[0][1] >= 2 && sorted[0][1] > sorted[1][1]) out.push('Predominan ' + ({w:'los',c:'las',s:'las',p:'los'})[sorted[0][0]] + ' ' + SUITMSG[sorted[0][0]]);
+  const missing = Object.entries(suitN).filter(([,v]) => !v).map(([k]) => k);
+  if (n >= 10 && missing.length === 1) out.push(`No aparece ninguna carta de ${SUITS[missing[0]].name}: puede ser un área que está quedando de lado.`);
+  if (revN/n >= .5) out.push(`Hay muchas cartas invertidas (${revN} de ${n}): energía trabada o que se vive hacia adentro. Conviene revisar antes de actuar.`);
+  else if (revN === 0 && state.reversals) out.push('Todas salieron al derecho: la energía fluye sin grandes trabas.');
+  const courts = cards.filter(x => x.card.arc!=='M' && x.card.n>10).length;
+  if (courts >= 2) out.push('Aparecen varias figuras de la corte: hay otras personas con peso en esta historia, o distintas facetas tuyas en juego.');
+  const nums = {}; cards.forEach(x => { if (x.card.arc!=='M' && x.card.n<=10) nums[x.card.n] = (nums[x.card.n]||0) + 1; });
+  if ((nums[1]||0) >= 2) out.push('Más de un As: algo nuevo está empezando con mucha fuerza.');
+  Object.entries(nums).forEach(([k,v]) => { if (+k > 1 && v >= 2) out.push(`Se repite el número ${k} (${v} veces): energía de ${NUM[k]}.`); });
+  return out;
+}
+function summaryHTML(rec){
+  const st = summaryLines(rec), key = cv(rec.c[KEYCARD[rec.k]]);
+  return `<div class="summary"><h3>Lectura general</h3>${narrative(rec).map(p => `<p>${p}</p>`).join('')}`
+    + (st.length ? `<h4 class="sec">Lo que dice el conjunto</h4>${st.map(l => `<p>${l}</p>`).join('')}` : '')
+    + `<p class="tip"><span>Para llevarte</span>${key.cons}</p></div>`;
+}
+function renderReading(box, rec, shown, newIdx){
+  const sp = SP[rec.k];
+  const idx = sp.pos.map((_,i) => i).filter(i => !shown || shown[i]);
+  const complete = idx.length === sp.pos.length;
+  box.innerHTML = `<div class="rhead"><h2>${sp.name}</h2><p class="meta">${fmtDate(rec.t)}</p>${rec.q?`<p class="question">“${esc(rec.q)}”</p>`:''}</div>`
+    + idx.map(i => entryHTML(rec, i, i===newIdx)).join('')
+    + (complete ? summaryHTML(rec) : '');
+}
+function renderLive(newIdx){ renderReading($('#reading'), liveRecord(), state.flipped, newIdx); }
+const plain = s => s.replace(/<[^>]+>/g, '');
+function readingText(rec){
+  const sp = SP[rec.k];
+  let t = `Tirada: ${sp.name}\n${fmtDate(rec.t)}\n` + (rec.q ? `Pregunta: ${rec.q}\n` : '') + '\n';
+  rec.c.forEach((c,i) => { const x = cv(c);
+    t += `${i+1}. ${sp.pos[i][0]}: ${x.card.name}${x.r?' (invertida)':''}\n`;
+    if (rec.k==='sino') t += `Respuesta: ${YN[x.pol][0]}\n`;
+    t += `${x.keys}\n${x.mean}\nEn esta posición: ${TPL[rec.k][i](x)}\n`;
+    if (rec.k==='amor') t += `En el amor: ${x.amor}\n`;
+    t += `Consejo: ${x.cons}\n\n`; });
+  const st = summaryLines(rec);
+  return t + 'LECTURA GENERAL\n' + narrative(rec).map(plain).join('\n') + (st.length ? '\n\n' + st.map(l => '· ' + l).join('\n') : '')
+    + `\n\nPara llevarte: ${cv(rec.c[KEYCARD[rec.k]]).cons}`;
+}
+async function copyReading(rec){
+  const text = readingText(rec);
+  try { await navigator.clipboard.writeText(text); toast('Lectura copiada'); }
+  catch(e){ openModal(`<h3 class="panel-title" style="margin-top:0">Copiá tu lectura</h3><textarea class="copybox" readonly>${esc(text)}</textarea>`); const ta = $('.copybox'); ta.focus(); ta.select(); }
+}
+
+/* ---------- interfaz ---------- */
+function setActions(list){
+  const box = $('#actions'); box.innerHTML = '';
+  list.forEach(a => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn' + (a.primary ? ' primary' : ''); b.textContent = a.label; b.disabled = !!a.disabled; if (a.on) b.onclick = a.on; box.appendChild(b); });
+}
+function update(){
+  const p = state.phase, n = state.spread.pos.length, left = n - state.picked.length;
+  $$('.chip').forEach(ch => { ch.classList.toggle('active', ch.dataset.k === state.spread.k); ch.disabled = ['shuffling','cut','pick','reveal'].includes(p); });
+  $('#reversals').disabled = !['idle','ready','done'].includes(p);
+  const st = $('#stack'); if (st) st.disabled = !(p==='idle' || p==='ready');
+  const hints = {
+    idle: 'Pensá en tu pregunta y barajá el mazo.',
+    shuffling: 'Barajando…',
+    ready: 'Barajá todas las veces que quieras. Cuando lo sientas listo, cortá.',
+    cut: 'Cortá el mazo: tocá la pila que te llame.',
+    pick: left === n ? `Elegí ${n===1?'una carta':n+' cartas'} del abanico.` : left > 0 ? `Te ${left===1?'falta 1 carta':'faltan '+left+' cartas'}.` : 'Listo.',
+    reveal: n === 1 ? 'Tocá la carta para darla vuelta.' : 'Tocá cada carta para darla vuelta.',
+    done: 'Tocá cualquier carta para verla de cerca.'
+  };
+  $('#hint').textContent = hints[p] || '';
+  if (p === 'idle') setActions([{label:'Barajar', primary:true, on:shuffle}]);
+  else if (p === 'shuffling') setActions([{label:'Barajando…', disabled:true}]);
+  else if (p === 'ready') setActions([{label:'Barajar otra vez', on:shuffle}, {label:'Cortar el mazo', primary:true, on:startCut}]);
+  else if (p === 'cut') setActions([]);
+  else if (p === 'pick') setActions(left > 0 ? [{label:'Elegir al azar', on:pickRandom}] : []);
+  else if (p === 'reveal') setActions(n > 1 ? [{label:'Dar vuelta todas', primary:true, on:flipAll}] : []);
+  else if (p === 'done') setActions([{label:'Copiar lectura', on:() => copyReading(liveRecord())}, {label:'Nueva tirada', primary:true, on:() => { resetReading(); $('#table').scrollIntoView({behavior: RM?'auto':'smooth', block:'start'}); }}]);
+}
+function buildChips(){
+  const box = $('#spreads');
+  box.innerHTML = SPREADS.map(s => `<button type="button" class="chip" data-k="${s.k}">${s.name}<small>${s.short}</small></button>`).join('');
+  $$('.chip', box).forEach(ch => ch.onclick = () => {
+    const sp = SP[ch.dataset.k]; if (!sp) return;
+    if (state.phase === 'done') { state.spread = sp; resetReading(); return; }
+    if (!['idle','ready'].includes(state.phase)) return;
+    state.spread = sp; buildSlots(); update();
+  });
+}
+let toastT;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200); }
+
+/* ---------- modal ---------- */
+let lastFocus = null;
+function openModal(html){ lastFocus = document.activeElement; $('#modal-body').innerHTML = html; $('#modal').hidden = false; $('#modal-close').focus(); }
+function closeModal(){ $('#modal').hidden = true; $('#modal-body').innerHTML = ''; if (lastFocus && lastFocus.focus) lastFocus.focus(); }
+$('#modal-close').onclick = closeModal;
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#modal').hidden) closeModal(); });
+function arcLabel(card){ return card.arc==='M' ? `Arcano Mayor ${ROMAN[card.n]}` : `Arcano Menor · ${SUITS[card.arc].name} · elemento ${SUITS[card.arc].el}`; }
+function openZoom(c, i){
+  const rec = liveRecord(), sp = SP[rec.k], x = cv(c), o = cv({id:c.id, r:!c.r}), pos = sp.pos[i];
+  openModal(`<div class="zoom"><div>${mini(c)}</div><div>
+    <div class="pos" style="font-size:34px">${pos[0]}</div><p class="posdesc" style="margin-bottom:10px">${pos[1]}</p>
+    <h3>${x.card.name}</h3><p class="arc">${arcLabel(x.card)} · ${x.r?'invertida':'al derecho'}</p>
+    <p class="keys">${x.keys}</p><p class="mean">${x.mean}</p>
+    <h4>En esta posición</h4><p class="mean">${TPL[rec.k][i](x)}</p>
+    ${rec.k==='amor' ? `<h4>En el amor</h4><p class="mean">${x.amor}</p>` : ''}
+    <p class="tip"><span>Consejo</span>${x.cons}</p>
+    <h4>${x.r?'Al derecho':'Invertida'}, en cambio</h4><p class="keys" style="margin-bottom:2px">${o.keys}</p><p class="mean">${o.mean}</p>
+  </div></div>`);
+}
+function openCard(id){
+  const card = BY_ID[id], u = cv({id, r:false}), v = cv({id, r:true});
+  openModal(`<div class="zoom"><div>${mini({id, r:false})}</div><div>
+    <h3>${card.name}</h3><p class="arc">${arcLabel(card)}</p>
+    <h4>Al derecho</h4><p class="keys" style="margin-bottom:2px">${u.keys}</p><p class="mean">${u.mean}</p>
+    <p class="mean"><b>En el amor:</b> ${u.amor}</p><p class="tip"><span>Consejo</span>${u.cons}</p>
+    <h4>Invertida</h4><p class="keys" style="margin-bottom:2px">${v.keys}</p><p class="mean">${v.mean}</p>
+    <p class="mean"><b>En el amor:</b> ${v.amor}</p><p class="tip"><span>Consejo</span>${v.cons}</p>
+    <h4>En una tirada de sí o no</h4><p class="mean">Al derecho: ${YN[u.pol][0]}. Invertida: ${YN[v.pol][0]}.</p>
+  </div></div>`);
+}
+
+/* ---------- historial (localStorage) ---------- */
+const HKEY = 'tarot-tiradas-v1';
+function loadHist(){ try { const raw = localStorage.getItem(HKEY); const v = raw ? JSON.parse(raw) : []; return Array.isArray(v) ? v : []; } catch(e){ return null; } }
+function saveHist(list){ try { localStorage.setItem(HKEY, JSON.stringify(list.slice(0,80))); return true; } catch(e){ return false; } }
+function saveRecord(rec){
+  const list = loadHist(); if (list === null) return;
+  list.unshift({t:rec.t, k:rec.k, q:rec.q, c:rec.c.map(x => [x.id, x.r?1:0])});
+  saveHist(list);
+}
+const fromStored = h => ({t:h.t, k:h.k, q:h.q||'', c:h.c.map(([id,r]) => ({id, r:!!r}))});
+function renderHistory(){
+  const box = $('#hist'), list = loadHist();
+  if (list === null){ box.innerHTML = '<p class="empty">Este navegador no permite guardar tiradas en esta página.</p>'; return; }
+  const valid = list.filter(h => SP[h.k] && Array.isArray(h.c) && h.c.every(x => BY_ID[x[0]]));
+  if (!valid.length){ box.innerHTML = '<p class="empty">Todavía no hay tiradas guardadas. Cuando termines de dar vuelta las cartas, la lectura aparece acá.</p>'; return; }
+  box.innerHTML = valid.map((h,i) => `<div class="hist-item">
+     <div class="hist-main"><div class="hist-top"><span class="hist-spread">${SP[h.k].name}</span><span class="hist-date">${fmtDate(h.t)}</span></div>
+     ${h.q?`<p class="hist-q">“${esc(h.q)}”</p>`:''}
+     <p class="hist-cards">${h.c.map(([id,r]) => esc(BY_ID[id].name) + (r?' (inv.)':'')).join(' · ')}</p></div>
+     <div class="hist-btns"><button class="btn sm" data-see="${i}">Ver</button><button class="btn sm ghost" data-del="${i}">Borrar</button></div></div>`).join('');
+  $$('[data-see]', box).forEach(b => b.onclick = () => {
+    const rec = fromStored(valid[+b.dataset.see]);
+    openModal('<div class="reading" id="hist-reading" style="margin-top:0"></div><div class="actions"><button class="btn" id="hist-copy">Copiar lectura</button></div>');
+    renderReading($('#hist-reading'), rec, null, -1);
+    $('#hist-copy').onclick = () => copyReading(rec);
+  });
+  $$('[data-del]', box).forEach(b => b.onclick = () => {
+    if (b.dataset.armed !== '1'){ b.dataset.armed = '1'; b.textContent = '¿Seguro?'; setTimeout(() => { if (b.isConnected){ b.dataset.armed = ''; b.textContent = 'Borrar'; } }, 3500); return; }
+    const target = valid[+b.dataset.del], all = loadHist() || [];
+    const k = all.findIndex(h => h.t === target.t && h.k === target.k);
+    if (k >= 0) all.splice(k,1);
+    saveHist(all); renderHistory();
+  });
+}
+
+/* ---------- el mazo (biblioteca) ---------- */
+const FILTERS = [['all','Todas'],['M','Arcanos Mayores'],['w','Bastos'],['c','Copas'],['s','Espadas'],['p','Oros']];
+let libFilter = 'all';
+function renderLibrary(){
+  $('#filters').innerHTML = FILTERS.map(([k,l]) => `<button type="button" class="chip${k===libFilter?' active':''}" data-f="${k}">${l}</button>`).join('');
+  $$('[data-f]').forEach(b => b.onclick = () => { libFilter = b.dataset.f; renderLibrary(); });
+  const cards = DECK.filter(c => libFilter==='all' || c.arc===libFilter);
+  $('#lib').innerHTML = cards.map(c => `<button type="button" class="libcard" data-id="${c.id}" aria-label="${c.name}">${mini({id:c.id, r:false})}</button>`).join('');
+  $$('.libcard').forEach(b => b.onclick = () => openCard(b.dataset.id));
+}
+
+/* ---------- vistas ---------- */
+const VIEWS = ['tirar','tiradas','mazo'];
+let libBuilt = false;
+function showView(v){
+  if (!VIEWS.includes(v)) v = 'tirar';
+  VIEWS.forEach(x => $('#view-'+x).hidden = x !== v);
+  $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === v));
+  if (v === 'tiradas') renderHistory();
+  if (v === 'mazo' && !libBuilt){ renderLibrary(); libBuilt = true; }
+  if (v === 'tirar') requestAnimationFrame(relayout);
+}
+$$('.tab').forEach(t => t.onclick = () => { const v = t.dataset.view; showView(v); try { if (location.hash !== '#'+v) history.replaceState(null, '', '#'+v); } catch(e){} });
+window.addEventListener('hashchange', () => showView(location.hash.slice(1)));
+
+/* ---------- otros controles ---------- */
+$('#reversals').addEventListener('change', e => {
+  state.reversals = e.target.checked;
+  if (!state.reversals) state.deck.forEach(c => c.r = false);
+  if (state.phase === 'ready'){ state.shuffled = false; state.phase = 'idle'; update(); }
+});
+function relayout(){
+  if ($('#view-tirar').hidden) return;
+  layoutSlots();
+  if (state.phase === 'idle' || state.phase === 'ready'){ const st = $('#stack'); if (st){ const w = stackW(); st.style.width = w+'px'; st.style.height = Math.round(w*CH)+'px'; } }
+  if (state.phase === 'pick' && $('.fan')){ const g = fanGeometry(state.fanCards.length); state.fanCW = g.cw; placeFan(g, false); }
+}
+let rT; window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(relayout, 120); });
+
+/* ---------- inicio ---------- */
+buildChips(); buildSlots(); renderStack(); update();
+showView(location.hash.slice(1));
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(relayout);
+window.__tarot = {state, DECK, frontSVG, fairShuffle};
+})();
+
+</script>
+</body>
+</html>
